@@ -22,6 +22,7 @@
 		F2608E2FD608F8ADCE8BE379 /* libPods-MusisTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F77C96E73C0C085639693AB0 /* libPods-MusisTests.a */; };
 		888854C6E23E44E69A937044 /* MavenProBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EA8E71E1613F4044912552DB /* MavenProBold.ttf */; };
 		3E8E16F8C86947AABC9C1993 /* MavenProRegular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0DC9C13AF7644C45A44415B5 /* MavenProRegular.ttf */; };
+		6698091268404A2C9501CEAF /* Ionicons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3C45537346BD4C6EBBCFE4DE /* Ionicons.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,6 +72,7 @@
 		F77C96E73C0C085639693AB0 /* libPods-MusisTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MusisTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EA8E71E1613F4044912552DB /* MavenProBold.ttf */ = {isa = PBXFileReference; name = "MavenProBold.ttf"; path = "../assets/fonts/MavenProBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 		0DC9C13AF7644C45A44415B5 /* MavenProRegular.ttf */ = {isa = PBXFileReference; name = "MavenProRegular.ttf"; path = "../assets/fonts/MavenProRegular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		3C45537346BD4C6EBBCFE4DE /* Ionicons.ttf */ = {isa = PBXFileReference; name = "Ionicons.ttf"; path = "../node_modules/react-native-ionicons/fonts/Ionicons.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -208,6 +210,7 @@
 			children = (
 				EA8E71E1613F4044912552DB /* MavenProBold.ttf */,
 				0DC9C13AF7644C45A44415B5 /* MavenProRegular.ttf */,
+				3C45537346BD4C6EBBCFE4DE /* Ionicons.ttf */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -355,6 +358,7 @@
 				13B07FBD1A68108700A75B9A /* LaunchScreen.xib in Resources */,
 				888854C6E23E44E69A937044 /* MavenProBold.ttf in Resources */,
 				3E8E16F8C86947AABC9C1993 /* MavenProRegular.ttf in Resources */,
+				6698091268404A2C9501CEAF /* Ionicons.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

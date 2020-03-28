@@ -13,6 +13,7 @@
     "react": "16.9.0",
     "react-native": "0.61.5",
     "react-native-geolocation-service": "^4.0.0",
+    "react-native-ionicons": "^5.0.0-beta",
     "react-native-maps": "0.27.1"
   },
   "devDependencies": {

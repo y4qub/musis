@@ -1,15 +1,16 @@
 import React from 'react'
-// import { MapScreen } from './src/screens/MapScreen'
+import { MapScreen } from './src/screens/MapScreen'
 import { View, StyleSheet, Text, Dimensions, Image, TouchableOpacity, FlatList, TextInput } from 'react-native'
 import { BottomBar } from './src/components/BottomBar'
 import { Tab } from './src/interfaces/tab'
 import { IChatItem } from './src/interfaces/chatItem'
 import Colors from './src/constants/Colors'
-// import { backendService } from './src/services/backend'
+import { backendService } from './src/services/backend'
+import Icon from 'react-native-ionicons'
 
 interface IProps { }
 
-interface IState { fontLoaded: boolean, activeTab: Tab, detail: IChatItem | undefined }
+interface IState { activeTab: Tab, detail: IChatItem | undefined }
 
 export default class App extends React.Component<IProps, IState> {
   data: IChatItem[] = [{ name: 'Pavel Dope', lastMessage: 'hey whaddup?', profilePicture: 'https://www.amsterdam-dance-event.nl/img/images/artists-speakers/25152018_2081958818692755_4224981802948165640_n_206787.jpg' }, { name: 'Martin Bida', lastMessage: 'cc', profilePicture: 'https://www.amsterdam-dance-event.nl/img/images/artists-speakers/25152018_2081958818692755_4224981802948165640_n_206787.jpg' }]
@@ -20,7 +21,6 @@ export default class App extends React.Component<IProps, IState> {
 
     this.changeTab = this.changeTab.bind(this)
     this.state = {
-      fontLoaded: false,
       activeTab: 'explore',
       detail: undefined
     }
@@ -32,30 +32,19 @@ export default class App extends React.Component<IProps, IState> {
 
   }
 
-  async componentDidMount() {
-    // await this.loadFonts()
-    this.setState({ fontLoaded: true })
-  }
-
   render() {
     return (
-      this.state.fontLoaded ? <View style={styles.container}>
+      <View style={styles.container}>
 
         {/* <MapScreen /> */}
+        <Icon name="alarm" />
         <Text style={styles.appTitle}>MUSIS</Text>
         {this.state.activeTab == 'chats' ? this.Chats(this.data, this.state.detail) : null}
         {/* <BottomBar activeTab={this.state.activeTab} changeTabCallback={this.changeTab}></BottomBar> */}
 
-      </View> : null
+      </View>
     )
   }
-
-  // async loadFonts() {
-  //   return Font.loadAsync({
-  //     'MavenProBold': require('./assets/fonts/MavenProBold.ttf'),
-  //     'MavenProRegular': require('./assets/fonts/MavenProRegular.ttf'),
-  //   })
-  // }
 
   changeTab(tab: Tab) {
     this.setState({ activeTab: tab })
