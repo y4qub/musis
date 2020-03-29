@@ -3,7 +3,7 @@ import { StyleSheet, PermissionsAndroid } from "react-native";
 import MapView, { Region } from 'react-native-maps';
 import { IMarker } from "../interfaces/marker";
 import { PlayerIcon } from "../components/PlayerIcon";
-import Geolocation from 'react-native-geolocation-service';
+import Geolocation, { clearWatch, stopObserving } from 'react-native-geolocation-service';
 import mapStyle from '../map_style.json'
 
 interface IProps { }
@@ -16,18 +16,13 @@ interface IState {
 
 export class MapScreen extends React.Component<IProps, IState> {
 
-    // map: MapView
-    locationSub: { remove: () => void }
     _mounted = false
+    watchId: number
 
     constructor(props) {
 
         super(props)
 
-        Geolocation.watchPosition(position => {
-            
-        })
-        
         this.state = {
             location: {
                 latitude: 49.82476725136718,
@@ -50,22 +45,34 @@ export class MapScreen extends React.Component<IProps, IState> {
 
     async componentDidMount() {
         this._mounted = true
-        const { status } = await PermissionsAndroid.request(PermissionsAndroid.)
-        if (status !== 'granted') return
+        var status
+        if (await !PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)) {
+            status = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)
+            if (status !== PermissionsAndroid.RESULTS.GRANTED) {
+                throw new Error('need location enabled')
+            }
+        }
         this.getLocationAsync()
     }
 
     componentWillUnmount() {
         this._mounted = false
-        if (this.locationSub) this.locationSub.remove()
+        try {
+            // clearWatch(this.watchId)
+            stopObserving()
+        } catch (err) {
+            console.error(err)
+        }
     }
 
     async getLocationAsync() {
-        const options = { accuracy: Location.Accuracy.Balanced, timeInterval: 5000, distanceInterval: 20 }
-        this.locationSub = await Location.watchPositionAsync(options, newLocation => this.updateLocation(newLocation))
+        this.watchId = Geolocation.watchPosition(newLocation => {
+            this.updateLocation(newLocation)
+            console.log(newLocation.coords)
+        })
     }
 
-    updateLocation(newLocation: Location.LocationData) {
+    updateLocation(newLocation: Geolocation.GeoPosition) {
         if (newLocation.coords.latitude != this.state.myMarker.latlng.latitude || newLocation.coords.longitude != this.state.myMarker.latlng.longitude) {
             console.log(newLocation)
             const update: Partial<IMarker> = { latlng: { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude } }
