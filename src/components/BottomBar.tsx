@@ -28,15 +28,21 @@ export class BottomBar extends React.Component<IProps, IState> {
         return (
             <View style={styles.tabBar}>
 
-                <TouchableOpacity style={{ ...styles.tabIcon, backgroundColor: exploreColor }} onPress={_ => this.props.changeTabCallback('explore')}>
+                <TouchableOpacity
+                style={{ ...styles.tabIcon, backgroundColor: exploreColor }}
+                onPress={_ => this.props.changeTabCallback('explore')}>
                     <Icon name="md-map" size={this.iconSize} color={this.iconColor} />
                 </TouchableOpacity>
 
-                <Text style={{ ...styles.tabTitle, color: this.props?.activeTab == 'explore' ? exploreColor : profileColor }}>
+                <Text 
+                style={{ ...styles.tabTitle,
+                color: this.props?.activeTab == 'explore' ? exploreColor : profileColor }}>
                     {tabName}
                 </Text>
 
-                <TouchableOpacity style={{ ...styles.tabIcon, backgroundColor: profileColor }} onPress={_ => this.props.changeTabCallback('chats')}>
+                <TouchableOpacity
+                style={{ ...styles.tabIcon, backgroundColor: profileColor }}
+                onPress={_ => this.props.changeTabCallback('chats')}>
                     <Icon name="md-person" size={this.iconSize} color={this.iconColor} />
                 </TouchableOpacity>
 
@@ -47,7 +53,9 @@ export class BottomBar extends React.Component<IProps, IState> {
 
 const styles = StyleSheet.create({
     tabBar: {
-        flexDirection: 'row', backgroundColor: '#202030', borderRadius: 38, height: 82, width: 263, marginBottom: 40, justifyContent: "space-between", alignItems: 'center', paddingHorizontal: 15
+        flexDirection: 'row', backgroundColor: '#202030', borderRadius: 38, height: 82,
+        width: 263, marginBottom: 40, justifyContent: "space-between", alignItems: 'center',
+        paddingHorizontal: 15
     },
     tabTitle: {
         fontFamily: 'MavenProBold', fontSize: 19

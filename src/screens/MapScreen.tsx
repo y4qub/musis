@@ -20,9 +20,7 @@ export class MapScreen extends React.Component<IProps, IState> {
     watchId: number
 
     constructor(props) {
-
         super(props)
-
         this.state = {
             location: {
                 latitude: 49.82476725136718,
@@ -40,7 +38,6 @@ export class MapScreen extends React.Component<IProps, IState> {
             },
             markers: Object.values(mockMarkers)
         }
-
     }
 
     async componentDidMount() {
@@ -73,9 +70,15 @@ export class MapScreen extends React.Component<IProps, IState> {
     }
 
     updateLocation(newLocation: Geolocation.GeoPosition) {
-        if (newLocation.coords.latitude != this.state.myMarker.latlng.latitude || newLocation.coords.longitude != this.state.myMarker.latlng.longitude) {
-            console.log(newLocation)
-            const update: Partial<IMarker> = { latlng: { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude } }
+        if (newLocation.coords.latitude != this.state.myMarker.latlng.latitude
+            || newLocation.coords.longitude != this.state.myMarker.latlng.longitude) {
+
+            const update: Partial<IMarker> = {
+                latlng: {
+                    latitude: newLocation.coords.latitude,
+                    longitude: newLocation.coords.longitude
+                }
+            }
             if (this._mounted) this.setState({ myMarker: { ...this.state.myMarker, ...update } })
         }
     }
@@ -89,15 +92,23 @@ export class MapScreen extends React.Component<IProps, IState> {
     // }
 
     render() {
-
         const selfMarker = PlayerIcon(this.state.myMarker, -1)
         const markers = this.state.markers.map((value, index) => {
             return PlayerIcon(value, index)
         })
-
         return (
             <>
-                <MapView style={styles.map} showsUserLocation={false} region={this.state.location} customMapStyle={mapStyle} provider="google" zoomTapEnabled={true} followsUserLocation={false} scrollEnabled={true} maxZoomLevel={16} minZoomLevel={12}>
+                <MapView
+                    style={styles.map}
+                    showsUserLocation={false}
+                    region={this.state.location}
+                    customMapStyle={mapStyle}
+                    provider="google"
+                    zoomTapEnabled={true}
+                    followsUserLocation={false}
+                    scrollEnabled={true}
+                    maxZoomLevel={16}
+                    minZoomLevel={12}>
                     {/* {markers} */}
                     {selfMarker}
                 </MapView>
@@ -105,7 +116,6 @@ export class MapScreen extends React.Component<IProps, IState> {
             </>
         )
     }
-
 }
 
 const mockMarkers = {

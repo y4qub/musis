@@ -181,6 +181,8 @@ android {
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "com.facebook.react:react-native:+"  // From node_modules
+    implementation project(':spotify-app-remote')
+    implementation "com.google.code.gson:gson:2.8.5"
 
     if (enableHermes) {
         def hermesPath = "../../node_modules/hermes-engine/android/";
