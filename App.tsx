@@ -7,6 +7,7 @@ import { IChatItem } from './src/interfaces/chatItem'
 import Colors from './src/constants/Colors'
 import { backendService } from './src/services/backend'
 import Icon from 'react-native-vector-icons/Ionicons';
+import { IMessage } from 'src/interfaces/message'
 
 interface IProps { }
 
@@ -21,8 +22,8 @@ export default class App extends React.Component<IProps, IState> {
 
     this.changeTab = this.changeTab.bind(this)
     this.state = {
-      activeTab: 'explore',
-      detail: undefined
+      activeTab: 'chats',
+      detail: this.data[0]
     }
 
     // backendService.auth.signInWithEmailAndPassword().then((data: any) => {
@@ -40,7 +41,7 @@ export default class App extends React.Component<IProps, IState> {
         <MapScreen />
         <Text style={styles.appTitle}>MUSIS</Text>
         {this.state.activeTab == 'chats' ? this.Chats(this.data, this.state.detail) : null}
-        <BottomBar activeTab={this.state.activeTab} changeTabCallback={this.changeTab}></BottomBar>
+        {!this.state.detail ? <BottomBar activeTab={this.state.activeTab} changeTabCallback={this.changeTab}></BottomBar> : null}
 
       </View>
     )
@@ -60,7 +61,7 @@ export default class App extends React.Component<IProps, IState> {
 
   Chats = (data: IChatItem[], detail?: IChatItem) => {
     return (
-      <View style={styles.chats}>
+      <View style={{...styles.chats, height: this.state.detail ? styles.chats.height + 90 : 430}}>
         {detail ? this.Detail(detail) : this.ChatList(data)}
       </View>)
   }
@@ -85,12 +86,12 @@ export default class App extends React.Component<IProps, IState> {
 
   ChatHeader = (detail: IChatItem) => {
     return (
-      <View style={styles.chatItem}>
-        <TouchableOpacity style={styles.backButton} onPress={() => this.handleBack()}>
+      <View style={styles.chatHeader}>
+        <TouchableOpacity style={{ ...styles.backButton }} onPress={() => this.handleBack()}>
           <Icon name="ios-arrow-back" color="white" size={37} />
         </TouchableOpacity>
         <View style={styles.chatHeaderTitle}>
-          <Image source={{ uri: detail.profilePicture, width: 70, height: 70 }} style={styles.profilePicture} />
+          <Image source={{ uri: detail.profilePicture, width: 50, height: 50 }} style={{ ...styles.profilePicture }} />
           <Text style={styles.chatItemTitle}>{detail.name}</Text>
         </View>
       </View>
@@ -101,21 +102,22 @@ export default class App extends React.Component<IProps, IState> {
     return (
       <View style={styles.detail}>
         {this.ChatHeader(detail)}
-        {this.Chat()}
+        {this.Chat([{ createdAt: 876, text: 'yuit', userUid: 'ownUID' }, { createdAt: 876, text: 'yuit', userUid: 'ownUID' }, { createdAt: 876, text: 'yuit', userUid: '8y79' }, { createdAt: 876, text: 'yuit', userUid: '8y79' }, { createdAt: 876, text: 'yuit', userUid: '8y79' }, { createdAt: 876, text: 'yuit', userUid: 'ownUID' }])}
         {this.ChatBottom()}
       </View>
     )
   }
 
-  Chat = () => {
+  Chat = (messages: IMessage[]) => {
     return (
-      <View style={{ flexGrow: 1 }}>
-        <View style={styles.textBubble}>
-          <Text style={{ color: 'white' }}>Hello whaddup??</Text>
-        </View>
-        <View style={styles.textBubble2}>
-          <Text style={{ color: 'white' }}>haha xd</Text>
-        </View>
+      <FlatList style={{ flexGrow: 1 }} data={messages} renderItem={({ item }) => this.Message(item)} keyExtractor={(item, index) => index.toString()} />
+    )
+  }
+
+  Message = (message: IMessage) => {
+    return (
+      <View style={message.userUid == 'ownUID' ? styles.textBubble : styles.textBubble2}>
+        <Text style={{ color: 'white' }}>{message.text}</Text>
       </View>
     )
   }
@@ -124,8 +126,8 @@ export default class App extends React.Component<IProps, IState> {
     return (
       <View style={styles.chatBottom}>
         <TextInput style={styles.chatTextInput} placeholder='Your message...' placeholderTextColor='rgba(255, 255, 255, 0.7)' />
-        <TouchableOpacity style={{ backgroundColor:'brown', padding:  }}>
-          <Icon name="ios-send" color="white" size={28} style={{backgroundColor: 'green'}} />
+        <TouchableOpacity style={{ paddingVertical: 14, paddingHorizontal: 20 }}>
+          <Icon name="ios-send" color="white" size={28} />
         </TouchableOpacity>
       </View>
     )
@@ -140,20 +142,21 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   appTitle: {
-    fontSize: 45, color: 'white', fontFamily: 'MavenProBold', marginTop: 40
+    fontSize: 40, color: 'white', fontFamily: 'MavenProBold', marginTop: 45
   },
-  profilePicture: { borderRadius: 50, marginRight: 20 },
-  textBubble: { borderRadius: 22, padding: 20, backgroundColor: 'rgba(255, 255, 255, 0.1)', alignSelf: 'flex-start', marginVertical: 10 },
-  textBubble2: { borderRadius: 22, padding: 20, backgroundColor: Colors.primary, alignSelf: 'flex-end', marginVertical: 10, },
+  profilePicture: { borderRadius: 50, marginRight: 20, backgroundColor: 'yellow' },
+  textBubble: { borderRadius: 17, paddingVertical: 12, paddingHorizontal: 17, backgroundColor: 'rgba(255, 255, 255, 0.1)', alignSelf: 'flex-start', marginVertical: 10 },
+  textBubble2: { borderRadius: 17, paddingVertical: 12, paddingHorizontal: 17, backgroundColor: Colors.primary, alignSelf: 'flex-end', marginVertical: 10, },
   detail: { flex: 1, flexDirection: 'column', justifyContent: 'space-between' },
-  backButton: { padding: 10, marginRight: 25 },
+  backButton: { padding: 15, marginRight: 25 },
   chatItem: { height: 80, flexDirection: 'row', alignItems: 'center' },
+  chatHeader: { flexDirection: 'row', alignItems: 'center' },
   chatItemTitle: { color: 'white', fontSize: 19, fontFamily: 'MavenProBold' },
   chatItemSubtitle: { color: 'white', fontSize: 15, fontFamily: 'MavenProRegular' },
   chats: {
-    backgroundColor: '#202030', padding: 25, borderRadius: 40, width: Dimensions.get('window').width, position: 'absolute', height: 450, top: Dimensions.get('window').height / 2 - 240 - 60
+    backgroundColor: '#202030', padding: 25, borderRadius: 40, width: Dimensions.get('window').width, position: 'absolute', height: 430, top: Dimensions.get('window').height / 2 - 240 - 60
   },
-  chatTextInput: { color: 'white', flex: 1, backgroundColor: 'red' },
-  chatBottom: { height: 53, borderRadius: 22, alignSelf: 'flex-start', backgroundColor: 'rgba(0, 0, 0, 0.4)', flexDirection: 'row', justifyContent: 'space-between', alignItems:'stretch', padding: 0, paddingHorizontal: 15 },
+  chatTextInput: { color: 'white', flex: 1, paddingTop: 10, paddingLeft: 20 },
+  chatBottom: { borderRadius: 22, alignSelf: 'flex-start', backgroundColor: 'rgba(0, 0, 0, 0.4)', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'stretch', padding: 0, marginTop: 10 },
   chatHeaderTitle: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }
 })

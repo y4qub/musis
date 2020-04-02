@@ -7,7 +7,7 @@ export function PlayerIcon(marker: IMarker, index) {
     return (
         <Marker coordinate={marker.latlng} key={index}>
             
-            <View style={{ ...styles.circle, backgroundColor: marker.color, }}>
+            <View style={{ ...styles.circle, backgroundColor: marker.color, backgroundColor: 'yellow'}}>
                 <Image source={{
                     uri: marker.imageUrl,
                     width: 50,
@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
         height: 58,
         justifyContent: 'center',
         alignItems: 'center',
-        zIndex: 998
+        zIndex: 998,
     },
     triangle: {
         marginTop: -28,

@@ -52,17 +52,17 @@ export class MapScreen extends React.Component<IProps, IState> {
                 throw new Error('need location enabled')
             }
         }
-        this.getLocationAsync()
+        // this.getLocationAsync()
     }
 
     componentWillUnmount() {
-        this._mounted = false
-        try {
-            // clearWatch(this.watchId)
-            stopObserving()
-        } catch (err) {
-            console.error(err)
-        }
+        // this._mounted = false
+        // try {
+        //     clearWatch(this.watchId)
+        //     stopObserving()
+        // } catch (err) {
+        //     console.error(err)
+        // }
     }
 
     async getLocationAsync() {

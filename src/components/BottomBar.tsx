@@ -47,7 +47,7 @@ export class BottomBar extends React.Component<IProps, IState> {
 
 const styles = StyleSheet.create({
     tabBar: {
-        flexDirection: 'row', backgroundColor: '#202030', borderRadius: 38, height: 82, width: 263, marginBottom: 50, justifyContent: "space-between", alignItems: 'center', paddingHorizontal: 15
+        flexDirection: 'row', backgroundColor: '#202030', borderRadius: 38, height: 82, width: 263, marginBottom: 40, justifyContent: "space-between", alignItems: 'center', paddingHorizontal: 15
     },
     tabTitle: {
         fontFamily: 'MavenProBold', fontSize: 19
