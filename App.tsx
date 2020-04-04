@@ -78,11 +78,14 @@ export default class App extends React.Component<IProps, IState> {
     )
   }
 
+  chatListRenderItem = ({ item }) => this.ChatItem(item)
+
   ChatList = (data: IChatItem[]) => {
     return (
       <FlatList
+        removeClippedSubviews={true}
         data={data}
-        renderItem={({ item }) => this.ChatItem(item)}
+        renderItem={this.chatListRenderItem}
         keyExtractor={(item, index) => index.toString()} />
     )
   }
@@ -131,12 +134,15 @@ export default class App extends React.Component<IProps, IState> {
     )
   }
 
+  chatRenderItem = ({ item }) => this.Message(item)
+
   Chat = (messages: IMessage[]) => {
     return (
       <FlatList
+        removeClippedSubviews={true}
         style={{ flexGrow: 1, paddingHorizontal: 25 }}
         data={messages}
-        renderItem={({ item }) => this.Message(item)}
+        renderItem={this.chatRenderItem}
         keyExtractor={(item, index) => index.toString()} />
     )
   }
@@ -185,7 +191,7 @@ const styles = StyleSheet.create({
     fontSize: 40, color: 'white', fontFamily: 'MavenProBold', marginTop: 45
   },
   profilePicture: {
-    borderRadius: 50, marginRight: 20, backgroundColor: 'yellow'
+    borderRadius: 50, marginRight: 20, backgroundColor: 'rgba(0,0,0,0.3)'
   },
   textBubble: {
     borderRadius: 17, paddingVertical: 12, paddingHorizontal: 17,
@@ -212,6 +218,7 @@ const styles = StyleSheet.create({
     color: 'white', fontSize: 15, fontFamily: 'MavenProRegular'
   },
   chats: {
+    position: 'absolute',
     backgroundColor: '#202030', paddingVertical: 25, borderRadius: 40,
     width: Dimensions.get('window').width,
     height: 430, top: Dimensions.get('window').height / 2 - 240 - 60
