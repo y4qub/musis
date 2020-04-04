@@ -8,6 +8,9 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
+import com.spotify.android.appremote.api.error.CouldNotFindSpotifyApp;
+import com.spotify.android.appremote.api.error.NotLoggedInException;
+import com.spotify.android.appremote.api.error.UserNotAuthorizedException;
 import com.spotify.protocol.types.Track;
 
 public class SpotifyModule extends ReactContextBaseJavaModule {
@@ -22,35 +25,46 @@ public class SpotifyModule extends ReactContextBaseJavaModule {
         LifecycleEventListener lifecycleEventListener = new LifecycleEventListener() {
             @Override
             public void onHostResume() {
+                //System.out.println("SPOTIFY HOST RESUME");
                 ConnectionParams connectionParams =
                         new ConnectionParams.Builder(CLIENT_ID)
                                 .setRedirectUri(REDIRECT_URI)
                                 .showAuthView(true)
                                 .build();
-
+                SpotifyAppRemote.disconnect(mSpotifyAppRemote);
                 SpotifyAppRemote.connect(getReactApplicationContext(), connectionParams,
                         new Connector.ConnectionListener() {
-
+                            @Override
                             public void onConnected(SpotifyAppRemote spotifyAppRemote) {
+                                System.out.println("SPOTIFY CONNECTED");
                                 mSpotifyAppRemote = spotifyAppRemote;
                                 Log.d("MainActivity", "Connected! Yay!");
                                 // Now you can start interacting with App Remote
                                 connected();
                             }
 
-                            public void onFailure(Throwable throwable) {
-                                Log.e("MyActivity", throwable.getMessage(), throwable);
-                                // Something went wrong when attempting to connect! Handle errors here
+                            @Override
+                            public void onFailure(Throwable error) {
+                                System.out.println("SPOTIFY FAILURE");
+                                System.out.println(error.toString());
+                                if (error instanceof NotLoggedInException || error instanceof UserNotAuthorizedException) {
+                                    // Show login button and trigger the login flow from auth library when clicked
+                                } else if (error instanceof CouldNotFindSpotifyApp) {
+                                    // Show button to download Spotify
+                                }
                             }
                         });
             }
 
             @Override
             public void onHostPause() {
+//                System.out.println("SPOTIFY PAUSE");
+                SpotifyAppRemote.disconnect(mSpotifyAppRemote);
             }
 
             @Override
             public void onHostDestroy() {
+                System.out.println("SPOTIFY DESTROY");
                 SpotifyAppRemote.disconnect(mSpotifyAppRemote);
             }
 
