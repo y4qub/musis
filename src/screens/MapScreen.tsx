@@ -3,7 +3,7 @@ import { StyleSheet, PermissionsAndroid } from "react-native";
 import MapView, { Region } from 'react-native-maps';
 import { IMarker } from "../interfaces/marker";
 import { PlayerIcon } from "../components/PlayerIcon";
-import Geolocation, { clearWatch, stopObserving } from 'react-native-geolocation-service';
+import Geolocation from 'react-native-geolocation-service';
 import mapStyle from '../map_style.json'
 
 interface IProps { }

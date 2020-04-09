@@ -45,7 +45,7 @@ export default class App extends React.Component<IProps, IState> {
       <View style={styles.container}>
         <MapScreen />
         <Text style={styles.appTitle}>MUSIS</Text>
-        {this.state.activeTab == 'chats' ? <ChatScreen /> : null}
+        <ChatScreen />
         <BottomBar activeTab={this.state.activeTab} changeTabCallback={this.changeTab} />
       </View>
     )
