@@ -1,8 +1,8 @@
 import React from "react";
-import { IChatItem } from "src/interfaces/chatItem";
+import { IChatItem } from "../interfaces/chatItem";
 import { View, FlatList, TouchableOpacity, Image, Text, TextInput, StyleSheet, Dimensions } from "react-native";
 import { IMessage } from "src/interfaces/message";
-import { backendService } from "src/services/backend";
+import { backendService } from "../../src/services/backend";
 import { firestore } from "firebase";
 import { Colors } from "react-native/Libraries/NewAppScreen";
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -10,27 +10,39 @@ import Icon from 'react-native-vector-icons/Ionicons';
 interface IProps { }
 
 interface IState {
-    detail: IChatItem
+    chatItems: IChatItem[]
+    detail?: IChatItem
 }
 
 export class ChatScreen extends React.Component<IProps, IState> {
 
-    Chats = (data: IChatItem[], detail?: IChatItem) => {
+    constructor(props) {
+        super(props)
+        this.state = ({
+            chatItems: data
+        })
+    }
+
+    render() {
+        return this.Chats()
+    }
+
+    Chats = () => {
         return (
             <View
                 style={{ ...styles.chats, height: this.state.detail ? styles.chats.height + 90 : 430 }}>
-                {detail ? this.Detail(detail) : this.ChatList(data)}
+                {this.state.detail ? this.Detail(this.state.detail) : this.ChatList()}
             </View>
         )
     }
 
     chatListRenderItem = ({ item }) => this.ChatItem(item)
 
-    ChatList = (data: IChatItem[]) => {
+    ChatList = () => {
         return (
             <FlatList
                 removeClippedSubviews={true}
-                data={data}
+                data={this.state.chatItems}
                 renderItem={this.chatListRenderItem}
                 keyExtractor={(item, index) => index.toString()} />
         )
@@ -107,7 +119,7 @@ export class ChatScreen extends React.Component<IProps, IState> {
             <View style={styles.chatBottom}>
                 <TextInput
                     style={styles.chatTextInput}
-                    placeholder='Your message...'
+                    placeholder='Your MMMM...'
                     placeholderTextColor='rgba(255, 255, 255, 0.7)' />
                 <TouchableOpacity
                     style={{ paddingVertical: 14, paddingHorizontal: 20 }}>
@@ -118,7 +130,7 @@ export class ChatScreen extends React.Component<IProps, IState> {
     }
 
     handleBack() {
-        this.setState({ detail: null })
+        this.setState({ detail: undefined })
     }
 
     changeChat(item: any) {

@@ -7,7 +7,7 @@ import { BottomBar } from './src/components/BottomBar'
 import { Tab } from './src/interfaces/tab'
 import Colors from './src/constants/Colors'
 import SpotifyModule from './src/services/SpotifyModule'
-import { ChatScreen } from 'src/screens/ChatScreen'
+import { ChatScreen } from './src/screens/ChatScreen'
 
 interface IProps { }
 
@@ -45,7 +45,7 @@ export default class App extends React.Component<IProps, IState> {
       <View style={styles.container}>
         <MapScreen />
         <Text style={styles.appTitle}>MUSIS</Text>
-        <ChatScreen />
+        {this.state.activeTab == 'chats' ? <ChatScreen /> : null}
         <BottomBar activeTab={this.state.activeTab} changeTabCallback={this.changeTab} />
       </View>
     )
