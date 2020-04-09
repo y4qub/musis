@@ -1,5 +1,5 @@
 export interface IMessage {
     text: string
-    userUid: string
-    createdAt: firebase.firestore.FieldValue
+    uid: string
+    createdAt: firebase.firestore.Timestamp
 }

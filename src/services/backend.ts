@@ -1,7 +1,7 @@
 import * as firebase from 'firebase'
 import 'firebase/firestore'
 import { ISong } from '../interfaces/song'
-import { IProviderAuth } from '../interfaces/auth'
+import { ISpotifyProviderAuth } from '../interfaces/auth'
 import { Subject } from 'rxjs'
 import { Location } from '../interfaces/location'
 import { IMessage } from '../interfaces/message'
@@ -21,57 +21,47 @@ class BackendService {
     private uid: string
     private authState: Subject<firebase.User> = new Subject
     user = {
-        setSpotifyAuth: async (auth: IProviderAuth) => {
-            if (!this.uid) return
-            await firebase.firestore().doc(`users/${this.uid}}`).set(auth)
-        },
-        getChats: () => {
-            if (!this.uid) return
-            return firebase.firestore().collection(`users/${this.uid}}`).where('users', 'array-contains', this.uid).get()
-        },
-        song: {
-            get: () => {
-                return firebase.firestore().doc(`users/${this.uid}}`).get()
-            },
-            set: async (song: ISong) => {
+        setSong: async (song: ISong) => {
                 if (!this.uid) return
                 await firebase.firestore().doc(`users/${this.uid}}`).set(song)
-            },
         },
-        location: {
-            set: async (location: Location) => {
+        setLocation: async (location: Location) => {
                 if (!this.uid) return
                 const geopoint = new firebase.firestore.GeoPoint(location.latitude, location.longitude)
                 const locationObj = { location: geopoint }
                 return firebase.firestore().doc(`users/${this.uid}}`).set(locationObj)
-            },
-            get: () => {
-                return firebase.firestore().doc(`users/${this.uid}}`).get()
-            }
-        }
-    }
-    auth = {
+        },
+        setSpotifyAuth: async (auth: ISpotifyProviderAuth) => {
+            if (!this.uid) return
+            return firebase.firestore().doc(`users/${this.uid}}/auth/spotify`).set(auth)
+        },
         signInWithEmailAndPassword: (email = 'murcja812@gmail.com', password = 'pust11') => {
             return firebase.auth().signInWithEmailAndPassword(email, password)
         },
         signOut: async () => { return firebase.auth().signOut() },
-        authState: this.authState.asObservable()
+        getUid: () => { return this.uid },
+        authState: this.authState.asObservable(),
     }
     chat = {
         sendMessage: async (text: string, chatId: string) => {
             if (!this.uid) return
             const message: IMessage = {
                 text: text,
-                userUid: this.uid,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                uid: this.uid,
+                createdAt: firebase.firestore.Timestamp.now()
             }
-
             const ref = firebase.firestore().doc(`chats/${chatId}}/private/messages`)
-            return await ref.update({ messages: firebase.firestore.FieldValue.arrayUnion(message) })
+            return ref.update({ messages: firebase.firestore.FieldValue.arrayUnion(message) })
         },
-        getChat: async () => {
-
-        }
+        getChats: async () => {
+            if (!this.uid) return
+            return firebase.firestore().collection(`chats`)
+                .where('users', 'array-contains', this.uid).get()
+        },
+        getChat: async (chatId: string) => {
+            if (!this.uid) return
+            return firebase.firestore().doc(`chats/${chatId}`).get()
+        },
     }
 
     constructor() {

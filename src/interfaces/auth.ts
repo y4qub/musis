@@ -1,4 +1,4 @@
-export interface IProviderAuth {
+export interface ISpotifyProviderAuth {
     accessToken: string
     refreshToken: string
 }
