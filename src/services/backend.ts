@@ -3,8 +3,10 @@ import 'firebase/firestore'
 import { ISong } from '../interfaces/song'
 import { ISpotifyProviderAuth } from '../interfaces/auth'
 import { Subject } from 'rxjs'
+import { switchMap } from 'rxjs/operators'
 import { Location } from '../interfaces/location'
 import { IMessage } from '../interfaces/message'
+import { Chats } from 'src/interfaces/firebase/chats'
 
 const firebaseConfig = {
     apiKey: "AIzaSyA3vxII6wOeazF9nr47AackE24PIOhGcjc",
@@ -22,14 +24,14 @@ class BackendService {
     private authState: Subject<firebase.User> = new Subject
     user = {
         setSong: async (song: ISong) => {
-                if (!this.uid) return
-                await firebase.firestore().doc(`users/${this.uid}}`).set(song)
+            if (!this.uid) return
+            await firebase.firestore().doc(`users/${this.uid}}`).set(song)
         },
         setLocation: async (location: Location) => {
-                if (!this.uid) return
-                const geopoint = new firebase.firestore.GeoPoint(location.latitude, location.longitude)
-                const locationObj = { location: geopoint }
-                return firebase.firestore().doc(`users/${this.uid}}`).set(locationObj)
+            if (!this.uid) return
+            const geopoint = new firebase.firestore.GeoPoint(location.latitude, location.longitude)
+            const locationObj = { location: geopoint }
+            return firebase.firestore().doc(`users/${this.uid}}`).set(locationObj)
         },
         setSpotifyAuth: async (auth: ISpotifyProviderAuth) => {
             if (!this.uid) return
@@ -54,10 +56,18 @@ class BackendService {
             return ref.update({ messages: firebase.firestore.FieldValue.arrayUnion(message) })
         },
         getChats: async () => {
+            console.log('UIDDDDDDD', this.uid)
             if (!this.uid) return
-            return firebase.firestore().collection(`chats`)
-                .where('users', 'array-contains', this.uid).get()
+            const res = await firebase.firestore().collection(`chats`)
+                .where('users', 'array-contains', 'PIS7tcE3N2NNQEnG2eRy7SlIkkt1').get()
+            console.log('HEYYYYYYYYYYYYYYYYY$%Y$YY$Y', res.size)
         },
+        getChats$: this.authState.pipe(
+            switchMap((user, index) => {
+                if (user)
+                    return 
+            })
+        ),
         getChat: async (chatId: string) => {
             if (!this.uid) return
             return firebase.firestore().doc(`chats/${chatId}`).get()

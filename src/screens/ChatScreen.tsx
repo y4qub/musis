@@ -1,16 +1,17 @@
 import React from "react";
 import { IChatItem } from "../interfaces/chatItem";
 import { View, FlatList, TouchableOpacity, Image, Text, TextInput, StyleSheet, Dimensions } from "react-native";
-import { IMessage } from "src/interfaces/message";
+import { IMessage } from "../interfaces/message";
 import { backendService } from "../../src/services/backend";
 import { firestore } from "firebase";
-import { Colors } from "react-native/Libraries/NewAppScreen";
 import Icon from 'react-native-vector-icons/Ionicons';
+import Colors from "../constants/Colors";
+import { Chats } from "src/interfaces/firebase/chats";
 
 interface IProps { }
 
 interface IState {
-    chatItems: IChatItem[]
+    chatItems?: IChatItem[]
     detail?: IChatItem
 }
 
@@ -18,20 +19,30 @@ export class ChatScreen extends React.Component<IProps, IState> {
 
     constructor(props) {
         super(props)
-        this.state = ({
-            chatItems: data
-        })
+        this.state = {}
+    }
+
+    componentDidMount() {
+        backendService.chat.getChats$.subscribe(data => data.onSnapshot({ next: data => console.log(data) }))
     }
 
     render() {
         return this.Chats()
     }
 
+    handleBack() {
+        this.setState({ detail: null })
+    }
+
+    changeChat(item: IChatItem) {
+        this.setState({ detail: item })
+    }
+
     Chats = () => {
         return (
             <View
                 style={{ ...styles.chats, height: this.state.detail ? styles.chats.height + 90 : 430 }}>
-                {this.state.detail ? this.Detail(this.state.detail) : this.ChatList()}
+                {this.state.detail ? this.Detail() : this.ChatList()}
             </View>
         )
     }
@@ -48,7 +59,7 @@ export class ChatScreen extends React.Component<IProps, IState> {
         )
     }
 
-    ChatItem = (item: any) => {
+    ChatItem = (item: IChatItem) => {
         return (
             <TouchableOpacity
                 style={styles.chatItem}
@@ -64,7 +75,7 @@ export class ChatScreen extends React.Component<IProps, IState> {
         )
     }
 
-    ChatHeader = (detail: IChatItem) => {
+    ChatHeader = () => {
         return (
             <View style={styles.chatHeader}>
                 <TouchableOpacity
@@ -74,18 +85,18 @@ export class ChatScreen extends React.Component<IProps, IState> {
                 </TouchableOpacity>
                 <View style={styles.chatHeaderTitle}>
                     <Image
-                        source={{ uri: detail.profilePicture, width: 50, height: 50 }}
+                        source={{ uri: this.state.detail.profilePicture, width: 50, height: 50 }}
                         style={{ ...styles.profilePicture }} />
-                    <Text style={styles.chatItemTitle}>{detail.name}</Text>
+                    <Text style={styles.chatItemTitle}>{this.state.detail.name}</Text>
                 </View>
             </View>
         )
     }
 
-    Detail = (detail: IChatItem) => {
+    Detail = () => {
         return (
             <View style={styles.detail}>
-                {this.ChatHeader(detail)}
+                {this.ChatHeader()}
                 {this.Chat(mockMessages)}
                 {this.ChatBottom()}
             </View>
@@ -108,7 +119,7 @@ export class ChatScreen extends React.Component<IProps, IState> {
     Message = (message: IMessage) => {
         return (
             <View
-                style={message.uid == backendService.user.getUid() ? styles.textBubbleOwn : styles.textBubble}>
+                style={message.uid == 'uid' ? styles.textBubbleOwn : styles.textBubble}>
                 <Text style={{ color: 'white' }}>{message.text}</Text>
             </View>
         )
@@ -119,7 +130,7 @@ export class ChatScreen extends React.Component<IProps, IState> {
             <View style={styles.chatBottom}>
                 <TextInput
                     style={styles.chatTextInput}
-                    placeholder='Your MMMM...'
+                    placeholder='Your message...'
                     placeholderTextColor='rgba(255, 255, 255, 0.7)' />
                 <TouchableOpacity
                     style={{ paddingVertical: 14, paddingHorizontal: 20 }}>
@@ -129,17 +140,9 @@ export class ChatScreen extends React.Component<IProps, IState> {
         )
     }
 
-    handleBack() {
-        this.setState({ detail: undefined })
-    }
-
-    changeChat(item: any) {
-        this.setState({ detail: item })
-    }
-
 }
 
-const data: IChatItem[] = [
+const mockChatItems: IChatItem[] = [
     {
         name: 'Pavel Dope',
         lastMessage: 'hey whaddup?',
@@ -154,23 +157,23 @@ const data: IChatItem[] = [
 ]
 
 const mockMessages: IMessage[] = [
+    { createdAt: firestore.Timestamp.now(), text: 'yuit', uid: 'uid' },
     { createdAt: firestore.Timestamp.now(), text: 'yuit', uid: '8y79' },
     { createdAt: firestore.Timestamp.now(), text: 'yuit', uid: '8y79' },
-    { createdAt: firestore.Timestamp.now(), text: 'yuit', uid: '8y79' },
-    { createdAt: firestore.Timestamp.now(), text: 'yuit', uid: '8y79' },
+    { createdAt: firestore.Timestamp.now(), text: 'yuit', uid: 'uid' },
 ]
 
 const styles = StyleSheet.create({
     profilePicture: {
         borderRadius: 50, marginRight: 20, backgroundColor: 'rgba(0,0,0,0.3)'
     },
-    textBubbleOwn: {
-        borderRadius: 17, paddingVertical: 12, paddingHorizontal: 17,
-        backgroundColor: 'rgba(255, 255, 255, 0.1)', alignSelf: 'flex-start', marginVertical: 10
-    },
     textBubble: {
         borderRadius: 17, paddingVertical: 12, paddingHorizontal: 17,
-        backgroundColor: Colors.primary, alignSelf: 'flex-end', marginVertical: 10,
+        backgroundColor: Colors.primary, alignSelf: 'flex-start', marginVertical: 10
+    },
+    textBubbleOwn: {
+        borderRadius: 17, paddingVertical: 12, paddingHorizontal: 17,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)', alignSelf: 'flex-end', marginVertical: 10,
     },
     detail: {
         flex: 1, flexDirection: 'column', justifyContent: 'space-between'
