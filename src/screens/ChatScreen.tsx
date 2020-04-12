@@ -3,10 +3,10 @@ import { IChatItem } from "../interfaces/chatItem";
 import { View, FlatList, TouchableOpacity, Image, Text, TextInput, StyleSheet, Dimensions } from "react-native";
 import { IMessage } from "../interfaces/message";
 import { backendService } from "../../src/services/backend";
-import { firestore } from "firebase";
 import Icon from 'react-native-vector-icons/Ionicons';
 import Colors from "../constants/Colors";
 import { Chats } from "src/interfaces/firebase/chats";
+import { FirebaseFirestoreTypes, firebase } from "@react-native-firebase/firestore";
 
 interface IProps { }
 
@@ -23,7 +23,9 @@ export class ChatScreen extends React.Component<IProps, IState> {
     }
 
     componentDidMount() {
-        backendService.chat.getChats$.subscribe(data => data.onSnapshot({ next: data => console.log(data) }))
+        backendService.chat.getChats$().subscribe(data => {
+            console.log(data.docs[0]['_data']['lastMessage'])
+        })
     }
 
     render() {
@@ -157,10 +159,10 @@ const mockChatItems: IChatItem[] = [
 ]
 
 const mockMessages: IMessage[] = [
-    { createdAt: firestore.Timestamp.now(), text: 'yuit', uid: 'uid' },
-    { createdAt: firestore.Timestamp.now(), text: 'yuit', uid: '8y79' },
-    { createdAt: firestore.Timestamp.now(), text: 'yuit', uid: '8y79' },
-    { createdAt: firestore.Timestamp.now(), text: 'yuit', uid: 'uid' },
+    { createdAt: firebase.firestore.Timestamp.now(), text: 'yuit', uid: 'uid' },
+    { createdAt: firebase.firestore.Timestamp.now(), text: 'yuit', uid: '8y79' },
+    { createdAt: firebase.firestore.Timestamp.now(), text: 'yuit', uid: '8y79' },
+    { createdAt: firebase.firestore.Timestamp.now(), text: 'yuit', uid: 'uid' },
 ]
 
 const styles = StyleSheet.create({

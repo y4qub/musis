@@ -1,5 +1,7 @@
+import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
+
 export interface IMessage {
     text: string
     uid: string
-    createdAt: firebase.firestore.Timestamp
+    createdAt: FirebaseFirestoreTypes.Timestamp
 }

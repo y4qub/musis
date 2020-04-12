@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1060875362349",
+    "firebase_url": "https://musis-app.firebaseio.com",
+    "project_id": "musis-app",
+    "storage_bucket": "musis-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1060875362349:android:20ccb01d1aabe5f539d8a4",
+        "android_client_info": {
+          "package_name": "com.musis"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1060875362349-bdj2fskvrmmp6i6mgarcu5dcidnr901v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA8HnFiaspsINfCLbwwRInddyhGF1VhqKM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1060875362349-bdj2fskvrmmp6i6mgarcu5dcidnr901v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

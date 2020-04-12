@@ -1,27 +1,19 @@
-import * as firebase from 'firebase'
-import 'firebase/firestore'
+import firebase from '@react-native-firebase/app'
+import '@react-native-firebase/firestore';
+import '@react-native-firebase/auth';
 import { ISong } from '../interfaces/song'
 import { ISpotifyProviderAuth } from '../interfaces/auth'
-import { Subject } from 'rxjs'
-import { switchMap } from 'rxjs/operators'
+import { Subject, Observable } from 'rxjs'
+import { switchMap, filter, combineLatest } from 'rxjs/operators'
 import { Location } from '../interfaces/location'
 import { IMessage } from '../interfaces/message'
 import { Chats } from 'src/interfaces/firebase/chats'
-
-const firebaseConfig = {
-    apiKey: "AIzaSyA3vxII6wOeazF9nr47AackE24PIOhGcjc",
-    authDomain: "musis-app.firebaseapp.com",
-    databaseURL: "https://musis-app.firebaseio.com",
-    projectId: "musis-app",
-    storageBucket: "musis-app.appspot.com",
-    messagingSenderId: "1060875362349",
-    appId: "1:1060875362349:web:027b1e0b89de170f39d8a4",
-    measurementId: "G-BWZRYS1XNT"
-}
+import { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 
 class BackendService {
     private uid: string
-    private authState: Subject<firebase.User> = new Subject
+    private authState = new Subject<FirebaseAuthTypes.User>()
     user = {
         setSong: async (song: ISong) => {
             if (!this.uid) return
@@ -55,19 +47,24 @@ class BackendService {
             const ref = firebase.firestore().doc(`chats/${chatId}}/private/messages`)
             return ref.update({ messages: firebase.firestore.FieldValue.arrayUnion(message) })
         },
-        getChats: async () => {
-            console.log('UIDDDDDDD', this.uid)
-            if (!this.uid) return
-            const res = await firebase.firestore().collection(`chats`)
-                .where('users', 'array-contains', 'PIS7tcE3N2NNQEnG2eRy7SlIkkt1').get()
-            console.log('HEYYYYYYYYYYYYYYYYY$%Y$YY$Y', res.size)
+        getChats$: () => {
+            return this.chat.getQuery().pipe(
+                filter(() => {
+                    return this.uid ? true : false
+                })
+            )
         },
-        getChats$: this.authState.pipe(
-            switchMap((user, index) => {
-                if (user)
-                    return 
-            })
-        ),
+        test: () => {
+            return combineLatest(this.user.authState, this.chat.getQuery)
+        },
+        getQuery: (): Observable<FirebaseFirestoreTypes.QuerySnapshot> => {
+            return Observable.create(observer =>
+                firebase.firestore().collection(`chats`)
+                    .where('users', 'array-contains', 'PIS7tcE3N2NNQEnG2eRy7SlIkkt1')
+                    .onSnapshot({ next: data => observer.next(data) })
+            )
+        },
+
         getChat: async (chatId: string) => {
             if (!this.uid) return
             return firebase.firestore().doc(`chats/${chatId}`).get()
@@ -75,7 +72,6 @@ class BackendService {
     }
 
     constructor() {
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig)
         firebase.auth().onAuthStateChanged(user => {
             if (user)
                 this.uid = user.uid
