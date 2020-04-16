@@ -13,20 +13,15 @@ import { LoginScreen } from './src/screens/LoginScreen'
 
 interface IProps { }
 
-interface IState { activeTab: Tab, status?: string }
+interface IState { activeTab: Tab, loggedIn?: boolean, spotifyConnected?: boolean }
 
 export default class App extends React.Component<IProps, IState> {
   spotifySdk: EmitterSubscription
-  loginFields = {
-    email: '',
-    password: ''
-  }
-  btnRef: any
+  eventListener: EmitterSubscription
   constructor(props: IProps) {
     super(props)
     this.changeTab = this.changeTab.bind(this)
     this.InnerScreen = this.InnerScreen.bind(this)
-    this.FirebaseLogin = this.FirebaseLogin.bind(this)
     this.state = {
       activeTab: 'explore'
     }
@@ -34,11 +29,16 @@ export default class App extends React.Component<IProps, IState> {
 
   componentDidMount() {
     const eventEmitter = new NativeEventEmitter(SpotifyModule)
-    // this.eventListener = eventEmitter.addListener('playerStateChanged', event => {
-    //   console.log('playerStateChanged', event)
-    // })
-    this.spotifySdk = eventEmitter.addListener('status', async event => {
-      this.setState({ status: 'disconnected' })
+    this.eventListener = eventEmitter.addListener('playerStateChanged', event => {
+      console.log('playerStateChanged', event)
+      backendService.user.setSong({ artist: event.artist, name: event.name, coverUrl: event.imageUri })
+
+    })
+    this.eventListener = eventEmitter.addListener('status', event => {
+      this.setState({ spotifyConnected: event == 'connected' })
+    })
+    backendService.user.authState.subscribe(user => {
+      this.setState({ loggedIn: user ? true : false })
     })
   }
 
@@ -47,33 +47,11 @@ export default class App extends React.Component<IProps, IState> {
   }
 
   render() {
+    const loaded = this.state.loggedIn != null && this.state.spotifyConnected != null
+    const auth = this.state.loggedIn && this.state.spotifyConnected
     return (
       <View style={styles.container}>
-        {this.state.status == 'connected' ? <this.InnerScreen /> : null}
-        {this.state.status == 'disconnected' ? <LoginScreen /> : null}
-        {this.state.status == 'logging' ? <this.FirebaseLogin /> : null}
-      </View>
-    )
-  }
-
-  async login() {
-    const loginRef = await backendService.user.
-      signInWithEmailAndPassword(this.loginFields.email, this.loginFields.password)
-    this.setState({ status: 'connected' })
-  }
-
-  FirebaseLogin() {
-    return (
-      <View style={styles.container}>
-        <TextInput
-          style={styles.chatTextInput}
-          placeholder='Email'
-          onChangeText={text => this.loginFields.email = text} />
-        <TextInput
-          style={styles.chatTextInput}
-          placeholder='Password'
-          onChangeText={text => this.loginFields.password = text} />
-        <Button onPress={() => this.login()} title={'Login'} ref={this.btnRef} />
+        {loaded ? (auth ? <this.InnerScreen /> : <LoginScreen />) : null}
       </View>
     )
   }
@@ -109,7 +87,4 @@ const styles = StyleSheet.create({
   appTitle: {
     fontSize: 40, color: 'white', fontFamily: 'MavenProBold', marginTop: 45
   },
-  chatTextInput: {
-    width: 210
-  }
 })

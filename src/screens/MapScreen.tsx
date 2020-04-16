@@ -3,8 +3,9 @@ import { StyleSheet, PermissionsAndroid } from "react-native";
 import MapView, { Region } from 'react-native-maps';
 import { IMarker } from "../interfaces/marker";
 import { PlayerIcon } from "../components/PlayerIcon";
-import Geolocation from 'react-native-geolocation-service';
+import Geolocation, { clearWatch } from 'react-native-geolocation-service';
 import mapStyle from '../map_style.json'
+import { backendService } from "../services/backend";
 
 interface IProps { }
 
@@ -36,37 +37,31 @@ export class MapScreen extends React.Component<IProps, IState> {
                 },
                 imageUrl: 'https://www.amsterdam-dance-event.nl/img/images/artists-speakers/25152018_2081958818692755_4224981802948165640_n_206787.jpg'
             },
-            markers: Object.values(mockMarkers)
+            markers: []
         }
     }
 
     async componentDidMount() {
         this._mounted = true
-        var status
         if (await !PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)) {
-            status = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)
+            const status = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)
             if (status !== PermissionsAndroid.RESULTS.GRANTED) {
                 throw new Error('need location enabled')
             }
         }
-        // this.getLocationAsync()
+
+        backendService.user.getMarkers$().subscribe(data => {
+            data.forEach(element => console.log(element.latlng))
+            this.setState({ markers: data })
+        })
+        this.watchId = Geolocation.watchPosition(newLocation => {
+            this.updateLocation(newLocation)
+        })
     }
 
     componentWillUnmount() {
-        // this._mounted = false
-        // try {
-        //     clearWatch(this.watchId)
-        //     stopObserving()
-        // } catch (err) {
-        //     console.error(err)
-        // }
-    }
-
-    async getLocationAsync() {
-        this.watchId = Geolocation.watchPosition(newLocation => {
-            this.updateLocation(newLocation)
-            console.log(newLocation.coords)
-        })
+        this._mounted = false
+        // clearWatch(this.watchId)
     }
 
     updateLocation(newLocation: Geolocation.GeoPosition) {
@@ -107,41 +102,15 @@ export class MapScreen extends React.Component<IProps, IState> {
                     zoomTapEnabled={true}
                     followsUserLocation={false}
                     scrollEnabled={true}
-                    maxZoomLevel={16}
-                    minZoomLevel={12}>
-                    {/* {markers} */}
+                    maxZoomLevel={6}
+                    // minZoomLevel={12}
+                >
+                    {markers}
                     {selfMarker}
                 </MapView>
                 {this.props.children}
             </>
         )
-    }
-}
-
-const mockMarkers = {
-    Ni9ji0gUKCzwSA89XLTD1: {
-        color: 'white',
-        latlng: {
-            latitude: 37.78825,
-            longitude: -122.4324,
-        },
-        imageUrl: 'https://www.amsterdam-dance-event.nl/img/images/artists-speakers/25152018_2081958818692755_4224981802948165640_n_206787.jpg'
-    },
-    Ni9ji0gUKCzwSA89XLTD2: {
-        color: '#3BFFBB',
-        latlng: {
-            latitude: 37.77925,
-            longitude: -122.4124,
-        },
-        imageUrl: 'https://www.amsterdam-dance-event.nl/img/images/artists-speakers/25152018_2081958818692755_4224981802948165640_n_206787.jpg'
-    },
-    Ni9ji0gUKCzwSA89XLTD: {
-        color: '#3BFFBB',
-        latlng: {
-            latitude: 49.82476725136718,
-            longitude: 18.18838957697153,
-        },
-        imageUrl: 'https://www.amsterdam-dance-event.nl/img/images/artists-speakers/25152018_2081958818692755_4224981802948165640_n_206787.jpg'
     }
 }
 

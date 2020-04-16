@@ -27,7 +27,6 @@ public class SpotifyModule extends ReactContextBaseJavaModule {
     private static final String REDIRECT_URI = "musis://spotifylogin";
     private static ReactApplicationContext reactContext;
     private SpotifyAppRemote mSpotifyAppRemote;
-    private boolean initialState = true;
 
     SpotifyModule(ReactApplicationContext context) {
         super(context);
@@ -41,7 +40,7 @@ public class SpotifyModule extends ReactContextBaseJavaModule {
 
             @Override
             public void onHostResume() {
-                connect(false);
+                connect();
             }
 
             @Override
@@ -100,7 +99,7 @@ public class SpotifyModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void connect(Boolean showDialogs) {
+    public void connect() {
         ConnectionParams connectionParams =
                 new ConnectionParams.Builder(CLIENT_ID)
                         .setRedirectUri(REDIRECT_URI)
@@ -114,43 +113,40 @@ public class SpotifyModule extends ReactContextBaseJavaModule {
                         mSpotifyAppRemote = spotifyAppRemote;
                         sendEvent("status", "connected");
                         connected();
-                        initialState = false;
                     }
 
                     @Override
                     public void onFailure(Throwable error) {
                         sendEvent("status", "disconnected");
-                        if (showDialogs || !initialState) {
-                            AlertDialog.Builder builder = new AlertDialog.Builder(getCurrentActivity());
-                            AlertDialog LoginBtn = builder.setTitle("Spotify app login")
-                                    .setMessage("You must be logged in your Spotify app!")
-                                    .setPositiveButton("LOG IN", SpotifyModule.this::spotifyLoginAction)
-                                    .setNegativeButton("CLOSE", SpotifyModule.this::exitAction)
-                                    .setCancelable(false)
-                                    .create();
-                            AlertDialog AuthBtn = builder.setTitle("Spotify app authorization")
-                                    .setMessage("You must authorize this app with your Spotify account before using it!")
-                                    .setPositiveButton("LOG IN", SpotifyModule.this::spotifyLoginAction)
-                                    .setNegativeButton("CLOSE", SpotifyModule.this::exitAction)
-                                    .setCancelable(false)
-                                    .create();
-                            AlertDialog InstallBtn = builder.setTitle("Spotify app not installed")
-                                    .setMessage("You must download the Spotify app first!")
-                                    .setPositiveButton("DOWNLOAD", SpotifyModule.this::downloadAction)
-                                    .setNegativeButton("CLOSE", SpotifyModule.this::exitAction)
-                                    .setCancelable(false)
-                                    .create();
-                            if (error instanceof NotLoggedInException || error instanceof UserNotAuthorizedException) {
-                                // Show login button and trigger the login flow from auth library when clicked
-                                if (error instanceof NotLoggedInException) {
-                                    LoginBtn.show();
-                                }
-                                if (error instanceof UserNotAuthorizedException) {
-                                    AuthBtn.show();
-                                }
-                            } else if (error instanceof CouldNotFindSpotifyApp) {
-                                InstallBtn.show();
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getCurrentActivity());
+                        AlertDialog LoginBtn = builder.setTitle("Spotify app login")
+                                .setMessage("You must be logged in your Spotify app!")
+                                .setPositiveButton("LOG IN", SpotifyModule.this::spotifyLoginAction)
+                                .setNegativeButton("CLOSE", SpotifyModule.this::exitAction)
+                                .setCancelable(false)
+                                .create();
+                        AlertDialog AuthBtn = builder.setTitle("Spotify app authorization")
+                                .setMessage("You must authorize this app with your Spotify account before using it!")
+                                .setPositiveButton("LOG IN", SpotifyModule.this::spotifyLoginAction)
+                                .setNegativeButton("CLOSE", SpotifyModule.this::exitAction)
+                                .setCancelable(false)
+                                .create();
+                        AlertDialog InstallBtn = builder.setTitle("Spotify app not installed")
+                                .setMessage("You must download the Spotify app first!")
+                                .setPositiveButton("DOWNLOAD", SpotifyModule.this::downloadAction)
+                                .setNegativeButton("CLOSE", SpotifyModule.this::exitAction)
+                                .setCancelable(false)
+                                .create();
+                        if (error instanceof NotLoggedInException || error instanceof UserNotAuthorizedException) {
+                            // Show login button and trigger the login flow from auth library when clicked
+                            if (error instanceof NotLoggedInException) {
+                                LoginBtn.show();
                             }
+                            if (error instanceof UserNotAuthorizedException) {
+                                AuthBtn.show();
+                            }
+                        } else if (error instanceof CouldNotFindSpotifyApp) {
+                            InstallBtn.show();
                         }
                     }
                 });

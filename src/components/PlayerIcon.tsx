@@ -7,7 +7,7 @@ export function PlayerIcon(marker: IMarker, index) {
     return (
         <Marker coordinate={marker.latlng} key={index}>
             
-            <View style={{ ...styles.circle, backgroundColor: marker.color, backgroundColor: 'yellow'}}>
+            <View style={{ ...styles.circle, backgroundColor: marker.color}}>
                 <Image source={{
                     uri: marker.imageUrl,
                     width: 50,

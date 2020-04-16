@@ -5,26 +5,47 @@ import { IMessage } from "../interfaces/message";
 import { backendService } from "../../src/services/backend";
 import Icon from 'react-native-vector-icons/Ionicons';
 import Colors from "../constants/Colors";
-import { Chats } from "src/interfaces/firebase/chats";
-import { FirebaseFirestoreTypes, firebase } from "@react-native-firebase/firestore";
+import { Subscription } from 'rxjs'
 
 interface IProps { }
 
 interface IState {
-    chatItems?: IChatItem[]
-    detail?: IChatItem
+    chatItems: IChatItem[]
+    detail?: {
+        chatItem: IChatItem
+        messages: IMessage[]
+    }
 }
 
 export class ChatScreen extends React.Component<IProps, IState> {
+    getChats$: Subscription
+    getDetailChatUnsub: () => void
+    textInput: TextInput
+    text: string
+    scrollView: FlatList<any>
 
     constructor(props) {
         super(props)
-        this.state = {}
+        this.state = { chatItems: [] }
     }
 
     componentDidMount() {
-        backendService.chat.getChats$().subscribe(data => {
-            console.log(data.docs[0]['_data']['lastMessage'])
+        this.getChats$ = backendService.chat.getChats().subscribe(chatItems => this.setState({ chatItems }))
+    }
+
+    componentWillUnmount() {
+        this.getChats$.unsubscribe()
+        this.getDetailChatUnsub()
+    }
+
+    handleBack() {
+        this.setState({ detail: null })
+    }
+
+    openDetail(item: IChatItem) {
+        if (this.getDetailChatUnsub) this.getDetailChatUnsub()
+        this.getDetailChatUnsub = backendService.chat.getDetailChat(item.id).onSnapshot(data => {
+            this.setState({ detail: { chatItem: item, messages: data.data().messages } })
         })
     }
 
@@ -32,19 +53,12 @@ export class ChatScreen extends React.Component<IProps, IState> {
         return this.Chats()
     }
 
-    handleBack() {
-        this.setState({ detail: null })
-    }
-
-    changeChat(item: IChatItem) {
-        this.setState({ detail: item })
-    }
-
     Chats = () => {
+        const viewType = this.state.detail ? this.Detail() : this.ChatList()
         return (
             <View
-                style={{ ...styles.chats, height: this.state.detail ? styles.chats.height + 90 : 430 }}>
-                {this.state.detail ? this.Detail() : this.ChatList()}
+                style={{ ...styles.chats, height: styles.chats.height }}>
+                {viewType}
             </View>
         )
     }
@@ -65,7 +79,7 @@ export class ChatScreen extends React.Component<IProps, IState> {
         return (
             <TouchableOpacity
                 style={styles.chatItem}
-                onPress={() => this.changeChat(item)}>
+                onPress={() => this.openDetail(item)}>
                 <Image
                     source={{ uri: item.profilePicture, width: 50, height: 50 }}
                     style={styles.profilePicture} />
@@ -87,19 +101,20 @@ export class ChatScreen extends React.Component<IProps, IState> {
                 </TouchableOpacity>
                 <View style={styles.chatHeaderTitle}>
                     <Image
-                        source={{ uri: this.state.detail.profilePicture, width: 50, height: 50 }}
+                        source={{ uri: this.state.detail.chatItem.profilePicture, width: 50, height: 50 }}
                         style={{ ...styles.profilePicture }} />
-                    <Text style={styles.chatItemTitle}>{this.state.detail.name}</Text>
+                    <Text style={styles.chatItemTitle}>{this.state.detail.chatItem.name}</Text>
                 </View>
             </View>
         )
     }
 
     Detail = () => {
+        this.state.detail.chatItem.id
         return (
             <View style={styles.detail}>
                 {this.ChatHeader()}
-                {this.Chat(mockMessages)}
+                {this.Chat()}
                 {this.ChatBottom()}
             </View>
         )
@@ -107,24 +122,36 @@ export class ChatScreen extends React.Component<IProps, IState> {
 
     chatRenderItem = ({ item }) => this.Message(item)
 
-    Chat = (messages: IMessage[]) => {
+    Chat = () => {
         return (
             <FlatList
                 removeClippedSubviews={true}
                 style={{ flexGrow: 1, paddingHorizontal: 25 }}
-                data={messages}
+                data={this.state.detail.messages}
                 renderItem={this.chatRenderItem}
-                keyExtractor={(item, index) => index.toString()} />
+                keyExtractor={(item, index) => index.toString()}
+                ref={flatList => { this.scrollView = flatList }}
+                onContentSizeChange={() => this.scrollView.scrollToEnd()} />
         )
     }
 
     Message = (message: IMessage) => {
+        const messageStyle = message.uid == backendService.user.getUid() ? styles.textBubbleOwn : styles.textBubble
         return (
             <View
-                style={message.uid == 'uid' ? styles.textBubbleOwn : styles.textBubble}>
+                style={messageStyle}>
                 <Text style={{ color: 'white' }}>{message.text}</Text>
             </View>
         )
+    }
+
+    sendMessage = () => {
+        const formattedText = this.text.replace(/\s/g, '')
+        if (formattedText) {
+            backendService.chat.sendMessage(formattedText, this.state.detail.chatItem.id)
+            this.text = null
+            this.textInput.clear()
+        }
     }
 
     ChatBottom = () => {
@@ -133,37 +160,19 @@ export class ChatScreen extends React.Component<IProps, IState> {
                 <TextInput
                     style={styles.chatTextInput}
                     placeholder='Your message...'
-                    placeholderTextColor='rgba(255, 255, 255, 0.7)' />
+                    placeholderTextColor='rgba(255, 255, 255, 0.7)'
+                    onChangeText={value => this.text = value}
+                    onSubmitEditing={() => this.sendMessage()}
+                    ref={input => { this.textInput = input }} />
                 <TouchableOpacity
-                    style={{ paddingVertical: 14, paddingHorizontal: 20 }}>
+                    style={{ paddingVertical: 14, paddingHorizontal: 20 }}
+                    onPress={() => this.sendMessage()}>
                     <Icon name="ios-send" color="white" size={28} />
                 </TouchableOpacity>
             </View>
         )
     }
-
 }
-
-const mockChatItems: IChatItem[] = [
-    {
-        name: 'Pavel Dope',
-        lastMessage: 'hey whaddup?',
-        profilePicture: 'https://www.amsterdam-dance-event.nl/img/images/artists-speakers/25152018_2081958818692755_4224981802948165640_n_206787.jpg'
-    }
-    ,
-    {
-        name: 'Martin Bida',
-        lastMessage: 'cc',
-        profilePicture: 'https://www.amsterdam-dance-event.nl/img/images/artists-speakers/25152018_2081958818692755_4224981802948165640_n_206787.jpg'
-    }
-]
-
-const mockMessages: IMessage[] = [
-    { createdAt: firebase.firestore.Timestamp.now(), text: 'yuit', uid: 'uid' },
-    { createdAt: firebase.firestore.Timestamp.now(), text: 'yuit', uid: '8y79' },
-    { createdAt: firebase.firestore.Timestamp.now(), text: 'yuit', uid: '8y79' },
-    { createdAt: firebase.firestore.Timestamp.now(), text: 'yuit', uid: 'uid' },
-]
 
 const styles = StyleSheet.create({
     profilePicture: {
@@ -171,11 +180,11 @@ const styles = StyleSheet.create({
     },
     textBubble: {
         borderRadius: 17, paddingVertical: 12, paddingHorizontal: 17,
-        backgroundColor: Colors.primary, alignSelf: 'flex-start', marginVertical: 10
+        backgroundColor: 'rgba(255, 255, 255, 0.1)', alignSelf: 'flex-start', marginVertical: 10
     },
     textBubbleOwn: {
         borderRadius: 17, paddingVertical: 12, paddingHorizontal: 17,
-        backgroundColor: 'rgba(255, 255, 255, 0.1)', alignSelf: 'flex-end', marginVertical: 10,
+        backgroundColor: Colors.primary, alignSelf: 'flex-end', marginVertical: 10,
     },
     detail: {
         flex: 1, flexDirection: 'column', justifyContent: 'space-between'

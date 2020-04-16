@@ -2,14 +2,15 @@ import firebase from '@react-native-firebase/app'
 import '@react-native-firebase/firestore';
 import '@react-native-firebase/auth';
 import { ISong } from '../interfaces/song'
-import { ISpotifyProviderAuth } from '../interfaces/auth'
 import { Subject, Observable } from 'rxjs'
-import { switchMap, filter, combineLatest } from 'rxjs/operators'
+import { flatMap, map } from 'rxjs/operators'
 import { Location } from '../interfaces/location'
 import { IMessage } from '../interfaces/message'
-import { Chats } from 'src/interfaces/firebase/chats'
 import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
+import { IChatItem } from '../interfaces/chatItem';
+import { IMarker } from '../interfaces/marker';
+import { User } from '../interfaces/firebase/user';
 
 class BackendService {
     private uid: string
@@ -25,49 +26,88 @@ class BackendService {
             const locationObj = { location: geopoint }
             return firebase.firestore().doc(`users/${this.uid}}`).set(locationObj)
         },
-        setSpotifyAuth: async (auth: ISpotifyProviderAuth) => {
-            if (!this.uid) return
-            return firebase.firestore().doc(`users/${this.uid}}/auth/spotify`).set(auth)
+        getUser: (uid: string) => {
+            return firebase.firestore().doc(`users/${uid}`)
         },
-        signInWithEmailAndPassword: (email = 'murcja812@gmail.com', password = 'pust11') => {
+        getUsers: () => {
+            return firebase.firestore().collection(`users`)
+        },
+        getUsers$: (): Observable<FirebaseFirestoreTypes.QuerySnapshot> => {
+            return Observable.create(observer =>
+                firebase.firestore().collection(`users`)
+                    .onSnapshot({ next: data => observer.next(data) })
+            )
+        },
+        getMarkers$: () => {
+            return backendService.user.getUsers$().pipe(
+                map(data => {
+                    var markers: IMarker[] = []
+                    for (const element of data.docs) {
+                        const user = element.data() as User
+                        const location = user.location
+                        const marker: IMarker = {
+                            color: 'red',
+                            imageUrl: user.song.cover_url,
+                            latlng: { latitude: location.latitude, longitude: location.longitude }
+                        }
+                        markers.push(marker)
+                    }
+                    return markers
+                })
+            )
+        },
+        signInWithEmailAndPassword: (email, password) => {
             return firebase.auth().signInWithEmailAndPassword(email, password)
         },
-        signOut: async () => { return firebase.auth().signOut() },
+        signOut: () => { return firebase.auth().signOut() },
         getUid: () => { return this.uid },
         authState: this.authState.asObservable(),
     }
     chat = {
-        sendMessage: async (text: string, chatId: string) => {
+        sendMessage: (text: string, chatId: string) => {
             if (!this.uid) return
             const message: IMessage = {
                 text: text,
                 uid: this.uid,
                 createdAt: firebase.firestore.Timestamp.now()
             }
-            const ref = firebase.firestore().doc(`chats/${chatId}}/private/messages`)
+            const ref = firebase.firestore().doc(`chats/${chatId}/private/messages`)
             return ref.update({ messages: firebase.firestore.FieldValue.arrayUnion(message) })
-        },
-        getChats$: () => {
-            return this.chat.getQuery().pipe(
-                filter(() => {
-                    return this.uid ? true : false
-                })
-            )
-        },
-        test: () => {
-            return combineLatest(this.user.authState, this.chat.getQuery)
         },
         getQuery: (): Observable<FirebaseFirestoreTypes.QuerySnapshot> => {
             return Observable.create(observer =>
                 firebase.firestore().collection(`chats`)
-                    .where('users', 'array-contains', 'PIS7tcE3N2NNQEnG2eRy7SlIkkt1')
+                    .where('users', 'array-contains', this.user.getUid())
                     .onSnapshot({ next: data => observer.next(data) })
             )
         },
-
-        getChat: async (chatId: string) => {
+        getChats: () => {
+            return this.chat.getQuery().pipe(
+                flatMap(async data => {
+                    var chatItems: IChatItem[] = []
+                    for (const chat of data.docs) {
+                        const users: [] = chat.data().users
+                        const otherUserUid = users.filter(element => element != this.user.getUid())[0]
+                        const otherUserRef = await this.user.getUser(otherUserUid).get()
+                        const otherUser = otherUserRef.data()
+                        const chatItem: IChatItem = {
+                            lastMessage: chat.data().lastMessage,
+                            name: otherUser.name,
+                            profilePicture: otherUser.song.cover_url,
+                            id: chat.data().id
+                        }
+                        chatItems.push(chatItem)
+                    }
+                    return chatItems
+                })
+            )
+        },
+        getDetailChat: (id: string) => {
+            return firebase.firestore().doc(`chats/${id}/private/messages`)
+        },
+        getChat: (chatId: string) => {
             if (!this.uid) return
-            return firebase.firestore().doc(`chats/${chatId}`).get()
+            return firebase.firestore().doc(`chats/${chatId}`)
         },
     }
 

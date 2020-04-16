@@ -1,4 +1,4 @@
-export interface Chats {
+export interface Chat {
     lastMessage: string
     users: string[]
 }
