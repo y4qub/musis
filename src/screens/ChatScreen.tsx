@@ -1,7 +1,7 @@
 import React from "react";
 import { IChatItem } from "../interfaces/chatItem";
 import { View, FlatList, TouchableOpacity, Image, Text, TextInput, StyleSheet, Dimensions } from "react-native";
-import { IMessage } from "../interfaces/message";
+import { IMessage } from "../interfaces/firebase/message";
 import { backendService } from "../../src/services/backend";
 import Icon from 'react-native-vector-icons/Ionicons';
 import Colors from "../constants/Colors";
@@ -18,7 +18,8 @@ interface IState {
 }
 
 export class ChatScreen extends React.Component<IProps, IState> {
-    getChats$: Subscription
+    getChatItemsSub: Subscription
+    getDetailSub: Subscription
     getDetailChatUnsub: () => void
     textInput: TextInput
     text: string
@@ -30,12 +31,15 @@ export class ChatScreen extends React.Component<IProps, IState> {
     }
 
     componentDidMount() {
-        this.getChats$ = backendService.chat.getChats().subscribe(chatItems => this.setState({ chatItems }))
+        this.getChatItemsSub = backendService.chat.getChatItems$()
+            .subscribe(chatItems => this.setState({ chatItems }))
+        this.getDetailSub = backendService.chat.getChatDetail$()
+            .subscribe(item => this.openDetail(item))
     }
 
     componentWillUnmount() {
-        this.getChats$.unsubscribe()
-        this.getDetailChatUnsub()
+        if (this.getChatItemsSub) this.getChatItemsSub.unsubscribe()
+        if (this.getDetailChatUnsub) this.getDetailChatUnsub()
     }
 
     handleBack() {
@@ -43,10 +47,25 @@ export class ChatScreen extends React.Component<IProps, IState> {
     }
 
     openDetail(item: IChatItem) {
-        if (this.getDetailChatUnsub) this.getDetailChatUnsub()
-        this.getDetailChatUnsub = backendService.chat.getDetailChat(item.id).onSnapshot(data => {
-            this.setState({ detail: { chatItem: item, messages: data.data().messages } })
+        const chatId = '6h789h9h786'
+        //getChatItem(chatId)
+        this.getDetailChatUnsub = backendService.chat.getChatMessages(item.id).onSnapshot(data => {
+            this.setState({ detail: { chatItem: item, messages: data.data()?.messages ?? [] } })
         })
+        // if (this.getDetailChatUnsub) this.getDetailChatUnsub()
+        // this.getDetailChatUnsub = backendService.chat.getChatMessages(item.id).onSnapshot(data => {
+        //     this.setState({ detail: { chatItem: item, messages: data.data()?.messages ?? [] } })
+        // })
+    }
+
+    sendMessage = () => {
+        if (!this.text) return
+        const formattedText = this.text.replace(/\s/g, '')
+        if (formattedText) {
+            backendService.chat.sendMessage(formattedText, this.state.detail.chatItem.id)
+            this.text = null
+            this.textInput.clear()
+        }
     }
 
     render() {
@@ -54,11 +73,11 @@ export class ChatScreen extends React.Component<IProps, IState> {
     }
 
     Chats = () => {
-        const viewType = this.state.detail ? this.Detail() : this.ChatList()
+        const content = this.state.detail ? this.Detail() : this.ChatList()
         return (
             <View
                 style={{ ...styles.chats, height: styles.chats.height }}>
-                {viewType}
+                {content}
             </View>
         )
     }
@@ -138,20 +157,10 @@ export class ChatScreen extends React.Component<IProps, IState> {
     Message = (message: IMessage) => {
         const messageStyle = message.uid == backendService.user.getUid() ? styles.textBubbleOwn : styles.textBubble
         return (
-            <View
-                style={messageStyle}>
+            <View style={messageStyle}>
                 <Text style={{ color: 'white' }}>{message.text}</Text>
             </View>
         )
-    }
-
-    sendMessage = () => {
-        const formattedText = this.text.replace(/\s/g, '')
-        if (formattedText) {
-            backendService.chat.sendMessage(formattedText, this.state.detail.chatItem.id)
-            this.text = null
-            this.textInput.clear()
-        }
     }
 
     ChatBottom = () => {

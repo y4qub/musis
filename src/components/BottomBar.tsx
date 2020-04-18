@@ -2,10 +2,10 @@ import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import React from "react";
 import { Tab } from "../interfaces/tab";
 import Icon from 'react-native-vector-icons/Ionicons';
+import { backendService } from "../services/backend";
 
 interface IProps {
     activeTab: Tab
-    changeTabCallback(tab: Tab): void
 }
 
 interface IState { }
@@ -30,7 +30,7 @@ export class BottomBar extends React.Component<IProps, IState> {
 
                 <TouchableOpacity
                 style={{ ...styles.tabIcon, backgroundColor: exploreColor }}
-                onPress={_ => this.props.changeTabCallback('explore')}>
+                onPress={_ => backendService.user.changeTab('explore')}>
                     <Icon name="md-map" size={this.iconSize} color={this.iconColor} />
                 </TouchableOpacity>
 
@@ -42,7 +42,7 @@ export class BottomBar extends React.Component<IProps, IState> {
 
                 <TouchableOpacity
                 style={{ ...styles.tabIcon, backgroundColor: profileColor }}
-                onPress={_ => this.props.changeTabCallback('chats')}>
+                onPress={_ => backendService.user.changeTab('chats')}>
                     <Icon name="md-person" size={this.iconSize} color={this.iconColor} />
                 </TouchableOpacity>
 

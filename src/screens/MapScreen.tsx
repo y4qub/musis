@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, PermissionsAndroid } from "react-native";
+import { StyleSheet, PermissionsAndroid, View } from "react-native";
 import MapView, { Region } from 'react-native-maps';
 import { IMarker } from "../interfaces/marker";
 import { PlayerIcon } from "../components/PlayerIcon";
@@ -35,7 +35,8 @@ export class MapScreen extends React.Component<IProps, IState> {
                     latitude: 49.82476725136718,
                     longitude: 18.18838957697153,
                 },
-                imageUrl: 'https://www.amsterdam-dance-event.nl/img/images/artists-speakers/25152018_2081958818692755_4224981802948165640_n_206787.jpg'
+                imageUrl: 'https://www.amsterdam-dance-event.nl/img/images/artists-speakers/25152018_2081958818692755_4224981802948165640_n_206787.jpg',
+                user: { name: 'hjkjh', uid: 'ghjg' }
             },
             markers: []
         }
@@ -51,7 +52,7 @@ export class MapScreen extends React.Component<IProps, IState> {
         }
 
         backendService.user.getMarkers$().subscribe(data => {
-            data.forEach(element => console.log(element.latlng))
+            // data.forEach(element => console.log(element.latlng))
             this.setState({ markers: data })
         })
         this.watchId = Geolocation.watchPosition(newLocation => {
@@ -87,30 +88,33 @@ export class MapScreen extends React.Component<IProps, IState> {
     // }
 
     render() {
-        const selfMarker = PlayerIcon(this.state.myMarker, -1)
+        // const selfMarker = <PlayerIcon marker={this.state.myMarker} index={-1}/>
         const markers = this.state.markers.map((value, index) => {
-            return PlayerIcon(value, index)
+            return <PlayerIcon marker={value} index={index} />
         })
-        return (
-            <>
-                <MapView
-                    style={styles.map}
-                    showsUserLocation={false}
-                    region={this.state.location}
-                    customMapStyle={mapStyle}
-                    provider="google"
-                    zoomTapEnabled={true}
-                    followsUserLocation={false}
-                    scrollEnabled={true}
-                    maxZoomLevel={6}
-                    // minZoomLevel={12}
-                >
-                    {markers}
-                    {selfMarker}
-                </MapView>
-                {this.props.children}
-            </>
-        )
+        return (<>
+            <MapView
+                style={styles.map}
+                showsUserLocation={false}
+                region={this.state.location}
+                customMapStyle={mapStyle}
+                provider="google"
+                zoomTapEnabled={true}
+                followsUserLocation={false}
+                scrollEnabled={true}
+                maxZoomLevel={6}
+                // minZoomLevel={12}
+                toolbarEnabled={false}
+                showsCompass={false}
+                showsTraffic={false}
+                showsBuildings={false}
+                showsIndoors={false}
+            >
+                {markers}
+                {/* {selfMarker} */}
+            </MapView>
+            {this.props.children}
+        </>)
     }
 }
 

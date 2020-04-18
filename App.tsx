@@ -2,7 +2,7 @@ import React from 'react'
 import { MapScreen } from './src/screens/MapScreen'
 import {
   View, StyleSheet, Text, NativeEventEmitter,
-  EmitterSubscription, Linking, Button, TextInput
+  EmitterSubscription, Linking
 } from 'react-native'
 import { BottomBar } from './src/components/BottomBar'
 import { Tab } from './src/interfaces/tab'
@@ -10,6 +10,7 @@ import SpotifyModule from './src/services/SpotifyModule'
 import { ChatScreen } from './src/screens/ChatScreen'
 import { backendService } from './src/services/backend'
 import { LoginScreen } from './src/screens/LoginScreen'
+import { Subscription } from 'rxjs'
 
 interface IProps { }
 
@@ -17,10 +18,11 @@ interface IState { activeTab: Tab, loggedIn?: boolean, spotifyConnected?: boolea
 
 export default class App extends React.Component<IProps, IState> {
   spotifySdk: EmitterSubscription
-  eventListener: EmitterSubscription
+  playbackStateListener: EmitterSubscription
+  authStateSub: Subscription
+  tabSub: Subscription
   constructor(props: IProps) {
     super(props)
-    this.changeTab = this.changeTab.bind(this)
     this.InnerScreen = this.InnerScreen.bind(this)
     this.state = {
       activeTab: 'explore'
@@ -28,22 +30,25 @@ export default class App extends React.Component<IProps, IState> {
   }
 
   componentDidMount() {
-    const eventEmitter = new NativeEventEmitter(SpotifyModule)
-    this.eventListener = eventEmitter.addListener('playerStateChanged', event => {
-      console.log('playerStateChanged', event)
+    const spotifyEventEmitter = new NativeEventEmitter(SpotifyModule)
+    this.playbackStateListener = spotifyEventEmitter.addListener('playerStateChanged', event => {
       backendService.user.setSong({ artist: event.artist, name: event.name, coverUrl: event.imageUri })
-
     })
-    this.eventListener = eventEmitter.addListener('status', event => {
+    this.playbackStateListener = spotifyEventEmitter.addListener('status', event => {
       this.setState({ spotifyConnected: event == 'connected' })
     })
-    backendService.user.authState.subscribe(user => {
+    this.authStateSub = backendService.user.authState.subscribe(user => {
       this.setState({ loggedIn: user ? true : false })
+    })
+    this.tabSub = backendService.tab.subscribe(tab => {
+      this.setState({ activeTab: tab })
     })
   }
 
   componentWillUnmount() {
     if (this.spotifySdk) this.spotifySdk.remove()
+    if (this.tabSub) this.tabSub.unsubscribe()
+    if (this.authStateSub) this.authStateSub.unsubscribe()
   }
 
   render() {
@@ -62,18 +67,13 @@ export default class App extends React.Component<IProps, IState> {
         <MapScreen />
         <Text style={styles.appTitle}>MUSIS</Text>
         {this.state.activeTab == 'chats' ? <ChatScreen /> : null}
-        <BottomBar activeTab={this.state.activeTab} changeTabCallback={this.changeTab} />
+        <BottomBar activeTab={this.state.activeTab} />
       </>
     )
   }
 
   async getUrlAsync() {
     return Linking.getInitialURL()
-  }
-
-  changeTab(tab: Tab) {
-    this.setState({ activeTab: tab })
-    // SpotifyModule.show('Awesome!', SpotifyModule.SHORT)
   }
 
 }

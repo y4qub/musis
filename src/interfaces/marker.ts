@@ -5,4 +5,8 @@ export interface IMarker {
     },
     imageUrl: string
     color: string
+    user: {
+        uid: string
+        name: string
+    }
 }
