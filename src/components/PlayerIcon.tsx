@@ -1,43 +1,50 @@
 import React from "react";
-import { Image, View, StyleSheet, Text, Button, Dimensions } from 'react-native'
+import { Image, View, StyleSheet, Text, Dimensions } from 'react-native'
 import { IMarker } from "../interfaces/marker";
 import { Marker, Callout } from "react-native-maps";
 import { backendService } from "../services/backend";
 import Icon from 'react-native-vector-icons/Ionicons';
+import { Subscription } from 'rxjs'
+import { ISong } from "src/interfaces/song";
 
-interface IProps { marker: IMarker, index }
+interface IProps { marker: IMarker }
 
 interface IState {
-    song?
+    song?: ISong
 }
 
 export class PlayerIcon extends React.Component<IProps, IState> {
+    getUserSub: Subscription
     constructor(props) {
         super(props)
         this.state = {}
     }
 
     componentDidMount() {
-        backendService.user.getUser$(this.props.marker.user.uid)
+        this.getUserSub = backendService.user.getUser$(this.props.marker.user.uid)
             .subscribe(data => this.setState({ song: data.data().song }))
     }
 
+    componentWillUnmount() {
+        if (this.getUserSub) this.getUserSub.unsubscribe()
+    }
+
     startChat() {
-        return backendService.chat.createChat(this.props.marker.user.uid, backendService.user.getUid())
-            .then(chatItem => {
-                // backendService.chat.openChat(chatItem)
-                console.log(chatItem)
-                // backendService.user.changeTab('chats')
+        backendService.chat.createChat(this.props.marker.user.uid, backendService.user.getUid())
+            .then(chatId => {
+                backendService.user.changeTab('chats')
+                backendService.chat.openChat(chatId)
             })
     }
 
     render() {
+        const image = `https://i.scdn.co/image/${this.props.marker.imageUrl?.split(':')[2]}`
         return (
-            <Marker coordinate={this.props.marker.latlng} key={this.props.index}>
+            <Marker coordinate={this.props.marker.latlng}>
 
                 <View style={{ ...styles.circle, backgroundColor: this.props.marker.color }}>
                     <Image source={{
-                        uri: this.props.marker.imageUrl,
+                        uri: image,
                         width: 50,
                         height: 50
                     }} style={{ borderRadius: 50, zIndex: 999 }}
@@ -52,9 +59,12 @@ export class PlayerIcon extends React.Component<IProps, IState> {
                 >
                     <View
                         style={styles.playerWidget}>
-                        {/* <View style={{ backgroundColor: 'gray', width: 85, height: 85, borderRadius: 50 }}></View> */}
-                        <Image source={{ uri: this.props.marker.imageUrl, width: 85, height: 85 }}
-                            style={{ width: 85, height: 85, borderRadius: 50 }} />
+                        <Image source={{
+                            uri: image,
+                            width: 80,
+                            height: 80,
+                        }} style={{ borderRadius: 50, zIndex: 999, marginLeft: 10 }} resizeMode={'cover'}
+                        />
                         <View>
                             <Text
                                 style={{ fontFamily: 'MavenProBold', color: '#FA8359', marginBottom: 5 }}
@@ -62,14 +72,14 @@ export class PlayerIcon extends React.Component<IProps, IState> {
                                 NOW PLAYING
                             </Text>
                             <Text
-                                style={{ fontFamily: 'MavenProRegular', color: 'white', fontSize: 18 }}
+                                style={{ fontFamily: 'MavenProRegular', color: 'white', fontSize: 16 }}
                             >
                                 {this.state.song?.name}
                             </Text>
                             <Text
                                 style={{ fontFamily: 'MavenProBold', color: 'white' }}
                             >
-                                Dystinct
+                                {this.state.song?.artist}
                             </Text>
                         </View>
                         <Icon name={'md-chatbubbles'} size={30} color={'#FA8359'} />
@@ -84,7 +94,13 @@ export class PlayerIcon extends React.Component<IProps, IState> {
 
 const styles = StyleSheet.create({
     playerWidget: {
-        ...StyleSheet.absoluteFillObject, borderRadius: 40, backgroundColor: '#393C49', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingRight: 28
+        ...StyleSheet.absoluteFillObject,
+        borderRadius: 40,
+        backgroundColor: '#393C49',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingRight: 22
     },
     circle: {
         borderRadius: 50,
@@ -111,6 +127,6 @@ const styles = StyleSheet.create({
     },
     callout: {
         height: 100,
-        width: Dimensions.get('screen').width * 0.8
+        width: Dimensions.get('screen').width * 0.9
     }
 })

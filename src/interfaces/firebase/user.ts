@@ -5,7 +5,7 @@ export interface IUser {
     song: {
         artist: string
         name: string
-        cover_url: string
+        coverUrl: string
     }
     name: string
     uid: string

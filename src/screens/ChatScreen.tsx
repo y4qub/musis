@@ -20,7 +20,6 @@ interface IState {
 export class ChatScreen extends React.Component<IProps, IState> {
     getChatItemsSub: Subscription
     getDetailSub: Subscription
-    getDetailChatUnsub: () => void
     textInput: TextInput
     text: string
     scrollView: FlatList<any>
@@ -34,28 +33,16 @@ export class ChatScreen extends React.Component<IProps, IState> {
         this.getChatItemsSub = backendService.chat.getChatItems$()
             .subscribe(chatItems => this.setState({ chatItems }))
         this.getDetailSub = backendService.chat.getChatDetail$()
-            .subscribe(item => this.openDetail(item))
+            .subscribe(item => this.setState({ detail: item }))
     }
 
     componentWillUnmount() {
         if (this.getChatItemsSub) this.getChatItemsSub.unsubscribe()
-        if (this.getDetailChatUnsub) this.getDetailChatUnsub()
+        if (this.getDetailSub) this.getDetailSub.unsubscribe()
     }
 
     handleBack() {
         this.setState({ detail: null })
-    }
-
-    openDetail(item: IChatItem) {
-        const chatId = '6h789h9h786'
-        //getChatItem(chatId)
-        this.getDetailChatUnsub = backendService.chat.getChatMessages(item.id).onSnapshot(data => {
-            this.setState({ detail: { chatItem: item, messages: data.data()?.messages ?? [] } })
-        })
-        // if (this.getDetailChatUnsub) this.getDetailChatUnsub()
-        // this.getDetailChatUnsub = backendService.chat.getChatMessages(item.id).onSnapshot(data => {
-        //     this.setState({ detail: { chatItem: item, messages: data.data()?.messages ?? [] } })
-        // })
     }
 
     sendMessage = () => {
@@ -66,6 +53,10 @@ export class ChatScreen extends React.Component<IProps, IState> {
             this.text = null
             this.textInput.clear()
         }
+    }
+
+    openChat(chatId: string) {
+        backendService.chat.openChat(chatId)
     }
 
     render() {
@@ -98,7 +89,7 @@ export class ChatScreen extends React.Component<IProps, IState> {
         return (
             <TouchableOpacity
                 style={styles.chatItem}
-                onPress={() => this.openDetail(item)}>
+                onPress={() => this.openChat(item.id)}>
                 <Image
                     source={{ uri: item.profilePicture, width: 50, height: 50 }}
                     style={styles.profilePicture} />

@@ -23,7 +23,6 @@ export default class App extends React.Component<IProps, IState> {
   tabSub: Subscription
   constructor(props: IProps) {
     super(props)
-    this.InnerScreen = this.InnerScreen.bind(this)
     this.state = {
       activeTab: 'explore'
     }
@@ -32,10 +31,10 @@ export default class App extends React.Component<IProps, IState> {
   componentDidMount() {
     const spotifyEventEmitter = new NativeEventEmitter(SpotifyModule)
     this.playbackStateListener = spotifyEventEmitter.addListener('playerStateChanged', event => {
-      backendService.user.setSong({ artist: event.artist, name: event.name, coverUrl: event.imageUri })
+      backendService.user.setSong({ artist: event.artist, name: event.name, coverUrl: event.cover_url })
     })
     this.playbackStateListener = spotifyEventEmitter.addListener('status', event => {
-      this.setState({ spotifyConnected: event == 'connected' })
+      this.setState({ spotifyConnected: event.status == 'connected' })
     })
     this.authStateSub = backendService.user.authState.subscribe(user => {
       this.setState({ loggedIn: user ? true : false })
@@ -49,26 +48,26 @@ export default class App extends React.Component<IProps, IState> {
     if (this.spotifySdk) this.spotifySdk.remove()
     if (this.tabSub) this.tabSub.unsubscribe()
     if (this.authStateSub) this.authStateSub.unsubscribe()
+    if (this.playbackStateListener) this.playbackStateListener.remove()
   }
 
   render() {
     const loaded = this.state.loggedIn != null && this.state.spotifyConnected != null
-    const auth = this.state.loggedIn && this.state.spotifyConnected
+    // const auth = this.state.loggedIn && this.state.spotifyConnected
+    const auth = this.state.loggedIn
     return (
-      <View style={styles.container}>
-        {loaded ? (auth ? <this.InnerScreen /> : <LoginScreen />) : null}
-      </View>
+      loaded ? (auth ? <this.InnerScreen /> : <LoginScreen />) : null
     )
   }
 
-  InnerScreen() {
+  InnerScreen = () => {
     return (
-      <>
+      <View style={styles.container}>
         <MapScreen />
         <Text style={styles.appTitle}>MUSIS</Text>
         {this.state.activeTab == 'chats' ? <ChatScreen /> : null}
         <BottomBar activeTab={this.state.activeTab} />
-      </>
+      </View>
     )
   }
 
@@ -82,7 +81,8 @@ const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'center',
+    backgroundColor: '#202030'
   },
   appTitle: {
     fontSize: 40, color: 'white', fontFamily: 'MavenProBold', marginTop: 45

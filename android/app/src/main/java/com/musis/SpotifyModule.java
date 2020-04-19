@@ -6,10 +6,14 @@ import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
@@ -17,6 +21,7 @@ import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.android.appremote.api.error.CouldNotFindSpotifyApp;
 import com.spotify.android.appremote.api.error.NotLoggedInException;
 import com.spotify.android.appremote.api.error.UserNotAuthorizedException;
+import com.spotify.protocol.types.Image;
 import com.spotify.protocol.types.Track;
 
 import java.util.Objects;
@@ -63,7 +68,11 @@ public class SpotifyModule extends ReactContextBaseJavaModule {
                 .setEventCallback(playerState -> {
                     final Track track = playerState.track;
                     if (track != null) {
-                        sendEvent("playerStateChanged", track);
+                        WritableMap params = Arguments.createMap();
+                        params.putString("name", track.name);
+                        params.putString("artist", track.artist.name);
+                        params.putString("cover_url", track.imageUri.raw);
+                        sendEvent("playerStateChanged", params);
                     }
                 });
     }
@@ -93,9 +102,9 @@ public class SpotifyModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private void sendEvent(String eventName, Object data) {
+    private void sendEvent(String eventName, @Nullable WritableMap params) {
         reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                .emit(eventName, data);
+                .emit(eventName, params);
     }
 
     @ReactMethod
@@ -111,13 +120,17 @@ public class SpotifyModule extends ReactContextBaseJavaModule {
                     @Override
                     public void onConnected(SpotifyAppRemote spotifyAppRemote) {
                         mSpotifyAppRemote = spotifyAppRemote;
-                        sendEvent("status", "connected");
+                        WritableMap params = Arguments.createMap();
+                        params.putString("status", "connected");
+                        sendEvent("status", params);
                         connected();
                     }
 
                     @Override
                     public void onFailure(Throwable error) {
-                        sendEvent("status", "disconnected");
+                        WritableMap params = Arguments.createMap();
+                        params.putString("status", "disconnected");
+                        sendEvent("status", params);
                         AlertDialog.Builder builder = new AlertDialog.Builder(getCurrentActivity());
                         AlertDialog LoginBtn = builder.setTitle("Spotify app login")
                                 .setMessage("You must be logged in your Spotify app!")

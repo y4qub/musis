@@ -11,7 +11,7 @@ interface IProps { }
 
 interface IState {
     markers: IMarker[]
-    myMarker: IMarker
+    userMarker: IMarker
     location: Region
 }
 
@@ -29,14 +29,9 @@ export class MapScreen extends React.Component<IProps, IState> {
                 latitudeDelta: 0.03,
                 longitudeDelta: 0.03
             },
-            myMarker: {
-                color: 'blue',
-                latlng: {
-                    latitude: 49.82476725136718,
-                    longitude: 18.18838957697153,
-                },
-                imageUrl: 'https://www.amsterdam-dance-event.nl/img/images/artists-speakers/25152018_2081958818692755_4224981802948165640_n_206787.jpg',
-                user: { name: 'hjkjh', uid: 'ghjg' }
+            userMarker: {
+                color: 'white',
+
             },
             markers: []
         }
@@ -66,8 +61,8 @@ export class MapScreen extends React.Component<IProps, IState> {
     }
 
     updateLocation(newLocation: Geolocation.GeoPosition) {
-        if (newLocation.coords.latitude != this.state.myMarker.latlng.latitude
-            || newLocation.coords.longitude != this.state.myMarker.latlng.longitude) {
+        if (newLocation.coords.latitude != this.state.userMarker.latlng.latitude
+            || newLocation.coords.longitude != this.state.userMarker.latlng.longitude) {
 
             const update: Partial<IMarker> = {
                 latlng: {
@@ -75,7 +70,7 @@ export class MapScreen extends React.Component<IProps, IState> {
                     longitude: newLocation.coords.longitude
                 }
             }
-            if (this._mounted) this.setState({ myMarker: { ...this.state.myMarker, ...update } })
+            if (this._mounted) this.setState({ userMarker: { ...this.state.userMarker, ...update } })
         }
     }
 
@@ -88,9 +83,9 @@ export class MapScreen extends React.Component<IProps, IState> {
     // }
 
     render() {
-        // const selfMarker = <PlayerIcon marker={this.state.myMarker} index={-1}/>
+        const marker = <PlayerIcon marker={{color: 'white', user: {name: '', uid: backendService.user.getUid()}, latlng: {latitude: this.state.location.latitude, longitude: this.state.location.longitude},imageUrl: ''}} />
         const markers = this.state.markers.map((value, index) => {
-            return <PlayerIcon marker={value} index={index} />
+            return <PlayerIcon marker={value} key={index} />
         })
         return (<>
             <MapView
@@ -111,7 +106,7 @@ export class MapScreen extends React.Component<IProps, IState> {
                 showsIndoors={false}
             >
                 {markers}
-                {/* {selfMarker} */}
+                {marker}
             </MapView>
             {this.props.children}
         </>)
