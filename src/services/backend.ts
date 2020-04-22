@@ -88,27 +88,27 @@ class BackendService {
         var color: string
         switch (random) {
             case 0:
-                color = 'blue'; break;
+                color = '#FFE4B5'; break;
             case 1:
-                color = 'red'; break;
+                color = '#AFEEEE'; break;
             case 2:
-                color = 'green'; break;
+                color = '#00FF7F'; break;
             case 3:
-                color = 'purple'; break;
+                color = '#40E0D0'; break;
             case 4:
-                color = 'pink'; break;
+                color = '#FFFFE0'; break;
             case 5:
-                color = 'aqua'; break;
+                color = '#F08080'; break;
             case 6:
-                color = 'cyan'; break;
+                color = '#7FFFD4'; break;
             case 7:
-                color = 'orange'; break;
+                color = '#FF7F50'; break;
             case 8:
-                color = 'teal'; break;
+                color = '#DDA0DD'; break;
             case 9:
-                color = 'yellow'; break;
+                color = '#F5F5DC'; break;
             case 10:
-                color = 'indigo'; break;
+                color = '#F4A460'; break;
         }
         return color
     }
