@@ -3,7 +3,7 @@ import '@react-native-firebase/firestore';
 import '@react-native-firebase/auth';
 import { ISong } from '../interfaces/song'
 import { Subject, Observable } from 'rxjs'
-import { flatMap, switchMap } from 'rxjs/operators'
+import { flatMap, switchMap, share } from 'rxjs/operators'
 import { IMessage } from '../interfaces/firebase/message'
 import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
@@ -51,6 +51,7 @@ class BackendService {
     }
     private getChatItem$ = (chatId: string) => {
         return this._getChat$(chatId).pipe(
+            share(),
             flatMap(async data => {
                 const chat = data.data()
                 const users: [] = chat.users
@@ -184,6 +185,7 @@ class BackendService {
         },
         getChatDetail$: () => {
             return this.chatDetail.pipe(
+                share(),
                 switchMap(chatId => {
                     return this._getChatDetail$(chatId)
                 })
@@ -191,6 +193,7 @@ class BackendService {
         },
         getChatItems$: () => {
             return this._getChats$().pipe(
+                share(),
                 flatMap(async data => {
                     var chatItems: IChatItem[] = []
                     for (const chat of data.docs) {

@@ -31,24 +31,15 @@ export class LoginScreen extends React.Component<IProps, IState> {
         this.setState({ register: false })
     }
 
-    clearInputs() {
-        this.setState({
-            loginFields:
-                { email: '', password: '', username: '', confirmPassword: '' }
-        })
-    }
-
     async login() {
         if (!this.state.loginFields.email || !this.state.loginFields.password) {
             this.showError('Empty fields!')
-            this.clearInputs()
             return
         }
         return backendService.user
             .signInWithEmailAndPassword(this.state.loginFields.email, this.state.loginFields.password)
             .catch(error => {
                 this.showError(error.toString())
-                this.clearInputs()
             })
     }
 
@@ -57,12 +48,10 @@ export class LoginScreen extends React.Component<IProps, IState> {
             || !this.state.loginFields.password
             || !this.state.loginFields.username) {
             this.showError('Empty fields!')
-            this.clearInputs()
             return
         }
         if (this.state.loginFields.password != this.state.loginFields.confirmPassword) {
             this.showError('Password do not match!')
-            this.clearInputs()
             return
         }
         return backendService.user
@@ -71,7 +60,6 @@ export class LoginScreen extends React.Component<IProps, IState> {
                 this.state.loginFields.username)
             .catch(error => {
                 this.showError(error.toString())
-                this.clearInputs()
             })
     }
 

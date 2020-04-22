@@ -25,6 +25,8 @@ export class PlayerIcon extends React.Component<IProps, IState> {
             `https://i.scdn.co/image/${this.props.user.song?.coverUrl?.split(':')[2]}`
         return (
             this.props.user.location ? <Marker
+                key={this.props.user.uid}
+                tracksInfoWindowChanges={false}
                 coordinate={
                     {
                         latitude: this.props.user.location.latitude,
@@ -39,6 +41,7 @@ export class PlayerIcon extends React.Component<IProps, IState> {
                             width: 50,
                             height: 50
                         }} style={styles.coverImage}
+                            fadeDuration={0}
                         /> : <Icon name={'md-person'} size={30} color={'gray'} />}
                 </View>
                 <View style={{ ...styles.triangle, borderBottomColor: this.props.color }}></View>

@@ -76,10 +76,12 @@ export default class App extends React.Component<IProps, IState> {
     return (
       <View style={styles.container}>
         <MapScreen />
-        <Text style={styles.appTitle}>MUSIS</Text>
+        <View style={styles.appTitle}>
+        <Text style={styles.appTitleText}>MUSIS</Text>
+        {this.LogoutButton()}
+        </View>
         <ChatScreen show={this.state.activeTab == 'chats'} />
         <BottomBar activeTab={this.state.activeTab} show={!this.state.keyboardStatus} />
-        {this.LogoutButton()}
       </View>
     )
   }
@@ -87,7 +89,7 @@ export default class App extends React.Component<IProps, IState> {
   LogoutButton = () => {
     return (
       <TouchableOpacity
-        style={{ ...styles.logoutButton }}
+        style={styles.logoutButton}
         onPress={_ => backendService.user.signOut()}>
         <Icon name="md-exit" size={28} color={'white'} />
       </TouchableOpacity>
@@ -107,20 +109,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.primaryBg
   },
-  appTitle: {
+  appTitleText: {
     fontSize: 40,
     color: 'white',
-    fontFamily: 'MavenProBold',
-    marginTop: 45
+    fontFamily: 'MavenProBold'
   },
+  appTitle: {flexDirection: 'row', marginTop: 35},
   logoutButton: {
     borderRadius: 50,
     height: 56, width: 56,
     justifyContent: "center",
     alignItems: 'center',
     backgroundColor: Colors.primaryBg,
-    position: "absolute",
-    top: 15,
-    right: 15
+    marginLeft: 25
   }
 })
