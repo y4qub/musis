@@ -2,6 +2,7 @@ import React from "react"
 import { View, StyleSheet, TouchableOpacity, Text, TextInput, Dimensions } from "react-native"
 import { backendService } from "../services/backend"
 import { DissmissKeyboard } from "../components/DismissKeyboard"
+import { LoginFields } from "src/interfaces/loginFields"
 
 interface IProps { }
 
@@ -10,18 +11,11 @@ interface IState {
     errorMessage?: string
 }
 
-interface LoginFields {
-    email: string
-    password: string
-    username: string
-}
-
 export class LoginScreen extends React.Component<IProps, IState> {
-    loginFields: LoginFields = {
-        email: 'murcja812@gmail.com',
-        password: 'pust11',
-        username: ''
-    }
+    loginFields: LoginFields = { email: '', password: '', username: '' }
+    emailInputRef: TextInput
+    passwordInputRef: TextInput
+    usernameInputRef: TextInput
 
     constructor(props) {
         super(props)
@@ -36,15 +30,21 @@ export class LoginScreen extends React.Component<IProps, IState> {
         this.setState({ register: false })
     }
 
+    clearInputs() {
+        this.emailInputRef.clear()
+        this.passwordInputRef.clear()
+        if(this.usernameInputRef) this.usernameInputRef.clear()
+    }
+
     async login() {
         if (!this.loginFields.email || !this.loginFields.password) return
-        const loginRef = await backendService.user
+        return backendService.user
             .signInWithEmailAndPassword(this.loginFields.email, this.loginFields.password)
     }
 
     async register() {
         if (!this.loginFields.email || !this.loginFields.password || !this.loginFields.username) return
-        const loginRef = await backendService.user
+        return backendService.user
             .createUser(this.loginFields.email, this.loginFields.password, this.loginFields.username)
     }
 
@@ -57,17 +57,22 @@ export class LoginScreen extends React.Component<IProps, IState> {
                 <View style={styles.container}>
                     <Text style={styles.appTitle}>MUSIS</Text>
                     <TextInput
+                        ref={input => this.emailInputRef = input}
                         style={styles.chatTextInput}
                         placeholder='Email'
                         autoCapitalize='none'
                         placeholderTextColor='rgba(255,255,255, 0.15)'
                         onChangeText={text => this.loginFields.email = text} />
-                    {this.state.register ? <TextInput
-                        style={styles.chatTextInput}
-                        placeholder='Username'
-                        placeholderTextColor='rgba(255,255,255, 0.15)'
-                        onChangeText={text => this.loginFields.username = text} /> : null}
+                    {this.state.register ?
+                        <TextInput
+                            ref={input => this.usernameInputRef = input}
+                            style={styles.chatTextInput}
+                            placeholder='Username'
+                            placeholderTextColor='rgba(255,255,255, 0.15)'
+                            onChangeText={text => this.loginFields.username = text} />
+                        : null}
                     <TextInput
+                        ref={input => this.passwordInputRef = input}
                         style={styles.chatTextInput}
                         placeholder='Password'
                         autoCapitalize='none'

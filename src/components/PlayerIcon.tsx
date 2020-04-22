@@ -1,98 +1,97 @@
 import React from "react";
 import { Image, View, StyleSheet, Text, Dimensions } from 'react-native'
-import { IMarker } from "../interfaces/marker";
 import { Marker, Callout } from "react-native-maps";
 import { backendService } from "../services/backend";
 import Icon from 'react-native-vector-icons/Ionicons';
-import { Subscription } from 'rxjs'
-import { ISong } from "src/interfaces/song";
+import { IUser } from "src/interfaces/firebase/user";
 
-interface IProps { marker: IMarker }
-
-interface IState {
-    song?: ISong
+interface IProps {
+    user: IUser,
+    color: string,
+    localUser?: boolean
 }
 
+interface IState { }
+
 export class PlayerIcon extends React.Component<IProps, IState> {
-    getUserSub: Subscription
-    constructor(props) {
-        super(props)
-        this.state = {}
-    }
 
-    componentDidMount() {
-        this.getUserSub = backendService.user.getUser$(this.props.marker.user.uid)
-            .subscribe(data => this.setState({ song: data.data().song }))
-    }
-
-    componentWillUnmount() {
-        if (this.getUserSub) this.getUserSub.unsubscribe()
-    }
-
-    startChat() {
-        backendService.chat.createChat(this.props.marker.user.uid, backendService.user.getUid())
-            .then(chatId => {
-                backendService.user.changeTab('chats')
-                backendService.chat.openChat(chatId)
-            })
+    async startChat() {
+        const chatId = await backendService.chat.createChat(this.props.user.uid)
+        backendService.chat.openChat(chatId)
     }
 
     render() {
-        const image = `https://i.scdn.co/image/${this.props.marker.imageUrl?.split(':')[2]}`
+        const imageUrl =
+            `https://i.scdn.co/image/${this.props.user.song?.coverUrl?.split(':')[2]}`
         return (
-            <Marker coordinate={this.props.marker.latlng}>
+            this.props.user.location ? <Marker
+                coordinate={
+                    {
+                        latitude: this.props.user.location.latitude,
+                        longitude: this.props.user.location.longitude
+                    }}>
 
-                <View style={{ ...styles.circle, backgroundColor: this.props.marker.color }}>
-                    <Image source={{
-                        uri: image,
-                        width: 50,
-                        height: 50
-                    }} style={{ borderRadius: 50, zIndex: 999 }}
-                    />
+                <View style={{ ...styles.circle, backgroundColor: this.props.color }}>
+
+                    {this.props.user.song ?
+                        <Image source={{
+                            uri: imageUrl,
+                            width: 50,
+                            height: 50
+                        }} style={styles.coverImage}
+                        /> : <Icon name={'md-person'} size={30} color={'gray'} />}
                 </View>
-                <View style={{ ...styles.triangle, borderBottomColor: this.props.marker.color }}></View>
-
-                <Callout
-                    style={styles.callout}
+                <View style={{ ...styles.triangle, borderBottomColor: this.props.color }}></View>
+                {this.props.user.song ? <Callout
+                    style={{
+                        ...styles.callout,
+                        width: this.props.localUser ?
+                            Dimensions.get('screen').width * 0.7 : styles.callout.width
+                    }}
                     tooltip={true}
-                    onPress={() => this.startChat()}
+                    onPress={() => this.props.localUser ? null : this.startChat()}
                 >
                     <View
                         style={styles.playerWidget}>
                         <Image source={{
-                            uri: image,
+                            uri: imageUrl,
                             width: 80,
                             height: 80,
-                        }} style={{ borderRadius: 50, zIndex: 999, marginLeft: 10 }} resizeMode={'cover'}
+                        }} style={styles.calloutImage} resizeMode={'cover'}
                         />
                         <View>
                             <Text
-                                style={{ fontFamily: 'MavenProBold', color: '#FA8359', marginBottom: 5 }}
+                                style={{ fontFamily: 'MavenProBold', color: this.props.color, marginBottom: 5 }}
                             >
                                 NOW PLAYING
-                            </Text>
+                        </Text>
                             <Text
                                 style={{ fontFamily: 'MavenProRegular', color: 'white', fontSize: 16 }}
                             >
-                                {this.state.song?.name}
+                                {this.props.user.song?.name}
                             </Text>
                             <Text
                                 style={{ fontFamily: 'MavenProBold', color: 'white' }}
                             >
-                                {this.state.song?.artist}
+                                {this.props.user.song?.artist}
                             </Text>
                         </View>
-                        <Icon name={'md-chatbubbles'} size={30} color={'#FA8359'} />
+                        {this.props.localUser ?
+                            null : <Icon name={'md-chatbubbles'} size={30} color={this.props.color} />}
                     </View>
-                </Callout>
+                </Callout> : null}
 
-            </Marker >
+
+            </Marker> : null
+
         )
     }
 
 }
 
 const styles = StyleSheet.create({
+    calloutImage: { borderRadius: 50, zIndex: 999, marginLeft: 10 },
+    coverImage: { borderRadius: 50, zIndex: 999 },
     playerWidget: {
         ...StyleSheet.absoluteFillObject,
         borderRadius: 40,

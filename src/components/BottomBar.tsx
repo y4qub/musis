@@ -6,13 +6,14 @@ import { backendService } from "../services/backend";
 
 interface IProps {
     activeTab: Tab
+    show: boolean
 }
 
 interface IState { }
 
 export class BottomBar extends React.Component<IProps, IState> {
 
-    private iconSize = 32
+    private iconSize = 28
     private iconColor = 'white'
 
     constructor(props) {
@@ -20,34 +21,38 @@ export class BottomBar extends React.Component<IProps, IState> {
     }
 
     render() {
+        return (
+            this.props.show ? this.bottomBar() : null
+        )
+    }
 
+    bottomBar = () => {
         const exploreColor = this.props?.activeTab == 'explore' ? '#FF7674' : '#2C2C41'
         const profileColor = this.props?.activeTab == 'chats' ? '#309EFF' : '#2C2C41'
         const tabName = this.props.activeTab.charAt(0).toUpperCase() + this.props.activeTab.substring(1)
+        return (<View style={styles.tabBar}>
 
-        return (
-            <View style={styles.tabBar}>
-
-                <TouchableOpacity
+            <TouchableOpacity
                 style={{ ...styles.tabIcon, backgroundColor: exploreColor }}
-                onPress={_ => backendService.user.changeTab('explore')}>
-                    <Icon name="md-map" size={this.iconSize} color={this.iconColor} />
-                </TouchableOpacity>
+                onPress={_ => backendService.changeTab('explore')}>
+                <Icon name="md-map" size={this.iconSize} color={this.iconColor} />
+            </TouchableOpacity>
 
-                <Text 
-                style={{ ...styles.tabTitle,
-                color: this.props?.activeTab == 'explore' ? exploreColor : profileColor }}>
-                    {tabName}
-                </Text>
+            <Text
+                style={{
+                    ...styles.tabTitle,
+                    color: this.props?.activeTab == 'explore' ? exploreColor : profileColor
+                }}>
+                {tabName}
+            </Text>
 
-                <TouchableOpacity
+            <TouchableOpacity
                 style={{ ...styles.tabIcon, backgroundColor: profileColor }}
-                onPress={_ => backendService.user.changeTab('chats')}>
-                    <Icon name="md-person" size={this.iconSize} color={this.iconColor} />
-                </TouchableOpacity>
+                onPress={_ => backendService.changeTab('chats')}>
+                <Icon name="md-chatbubbles" size={this.iconSize} color={this.iconColor} />
+            </TouchableOpacity>
 
-            </View>
-        )
+        </View>)
     }
 }
 

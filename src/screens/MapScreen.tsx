@@ -1,112 +1,148 @@
 import React from "react";
-import { StyleSheet, PermissionsAndroid, View } from "react-native";
+import { StyleSheet, PermissionsAndroid, Alert } from "react-native";
 import MapView, { Region } from 'react-native-maps';
-import { IMarker } from "../interfaces/marker";
 import { PlayerIcon } from "../components/PlayerIcon";
-import Geolocation, { clearWatch } from 'react-native-geolocation-service';
+import Geolocation from 'react-native-geolocation-service';
 import mapStyle from '../map_style.json'
 import { backendService } from "../services/backend";
+import { IUser } from "src/interfaces/firebase/user";
+import { firebase } from "@react-native-firebase/firestore";
+import { ISong } from "src/interfaces/song";
+import { Subscription } from 'rxjs'
 
 interface IProps { }
 
 interface IState {
-    markers: IMarker[]
-    userMarker: IMarker
+    users: IUser[]
     location: Region
+    song?: ISong
 }
 
 export class MapScreen extends React.Component<IProps, IState> {
-
     _mounted = false
     watchId: number
+    mapRef: MapView
+    getSongSub: Subscription
+    getUsersSub: Subscription
 
     constructor(props) {
         super(props)
         this.state = {
             location: {
-                latitude: 49.82476725136718,
-                longitude: 18.18838957697153,
-                latitudeDelta: 0.03,
-                longitudeDelta: 0.03
+                latitude: 49,
+                longitude: 18,
+                latitudeDelta: 20,
+                longitudeDelta: 20
             },
-            userMarker: {
-                color: 'white',
-
-            },
-            markers: []
+            users: []
         }
     }
 
     async componentDidMount() {
         this._mounted = true
-        if (await !PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)) {
-            const status = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)
-            if (status !== PermissionsAndroid.RESULTS.GRANTED) {
-                throw new Error('need location enabled')
-            }
-        }
-
-        backendService.user.getMarkers$().subscribe(data => {
-            // data.forEach(element => console.log(element.latlng))
-            this.setState({ markers: data })
-        })
+        this.getSongSub = backendService.getSong$().subscribe(song => this.setState({ song: song }))
+        const permisson = await this.checkPermission()
+        this.getUsersSub = backendService.user.getUsers$()
+            .map(data =>
+                data.docs.map(element => {
+                    const user = element.data() as IUser
+                    user.color = backendService.generateRandomColor()
+                    return user
+                })
+            ).subscribe(data => {
+                this.setState({ users: data })
+            })
+        if (!permisson) return
         this.watchId = Geolocation.watchPosition(newLocation => {
             this.updateLocation(newLocation)
-        })
+        }, () => { }, { distanceFilter: 10 })
     }
 
     componentWillUnmount() {
         this._mounted = false
-        // clearWatch(this.watchId)
+        Geolocation.clearWatch(this.watchId)
+        this.getSongSub.unsubscribe()
+        this.getUsersSub.unsubscribe()
     }
 
-    updateLocation(newLocation: Geolocation.GeoPosition) {
-        if (newLocation.coords.latitude != this.state.userMarker.latlng.latitude
-            || newLocation.coords.longitude != this.state.userMarker.latlng.longitude) {
-
-            const update: Partial<IMarker> = {
-                latlng: {
-                    latitude: newLocation.coords.latitude,
-                    longitude: newLocation.coords.longitude
-                }
+    async checkPermission() {
+        const permission = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)
+        if (!permission) {
+            const status = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)
+            if (status !== PermissionsAndroid.RESULTS.GRANTED) {
+                Alert.alert('Location disabled', 'You need to enable your location in order to use this app!')
+                return false
+            } else {
+                return true
             }
-            if (this._mounted) this.setState({ userMarker: { ...this.state.userMarker, ...update } })
+        } else {
+            return true
         }
     }
 
-    // updateDelta(region: Region) {
-    //     this.currentDelta = { latitudeDelta: region.latitudeDelta, longitudeDelta: region.longitudeDelta }
-    // }
+    updateLocation(location: Geolocation.GeoPosition) {
+        if (location.coords.latitude == this.state.location.latitude
+            && location.coords.longitude == this.state.location.longitude) return
+        if (!this._mounted) return
+        this.setState({
+            location: {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+                latitudeDelta: this.state.location.latitudeDelta,
+                longitudeDelta: this.state.location.longitudeDelta
+            }
+        })
+        backendService.user.setLocation(location)
+        this.centerMap()
+    }
 
-    // handleCenter() {
-    //     this.map.animateToRegion(this.state.location)
-    // }
+    centerMap() {
+        this.mapRef.animateToRegion(this.state.location)
+    }
+
+    getMarkers() {
+        return this.state.users.map((user, index) => {
+            if (user.uid == backendService.user.getUid()) return
+            return <PlayerIcon
+                user={user}
+                color={user.color}
+                key={index} />
+        })
+    }
 
     render() {
-        const marker = <PlayerIcon marker={{color: 'white', user: {name: '', uid: backendService.user.getUid()}, latlng: {latitude: this.state.location.latitude, longitude: this.state.location.longitude},imageUrl: ''}} />
-        const markers = this.state.markers.map((value, index) => {
-            return <PlayerIcon marker={value} key={index} />
-        })
+        const userMarker = <PlayerIcon
+            user={{
+                color: 'white',
+                location:
+                    new firebase.firestore.GeoPoint(this.state.location.latitude, this.state.location.longitude),
+                name: '',
+                uid: backendService.user.getUid(),
+                song: this.state.song
+            }}
+            color={'white'}
+            key={-1}
+            localUser={true} />
         return (<>
             <MapView
+                ref={map => this.mapRef = map}
                 style={styles.map}
                 showsUserLocation={false}
                 region={this.state.location}
                 customMapStyle={mapStyle}
                 provider="google"
-                zoomTapEnabled={true}
                 followsUserLocation={false}
-                scrollEnabled={true}
-                maxZoomLevel={6}
-                // minZoomLevel={12}
+                maxZoomLevel={10}
+                minZoomLevel={4}
                 toolbarEnabled={false}
                 showsCompass={false}
                 showsTraffic={false}
                 showsBuildings={false}
                 showsIndoors={false}
+                rotateEnabled={false}
             >
-                {markers}
-                {marker}
+                {this.getMarkers()}
+                {userMarker}
             </MapView>
             {this.props.children}
         </>)

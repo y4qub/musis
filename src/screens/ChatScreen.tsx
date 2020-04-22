@@ -1,13 +1,13 @@
 import React from "react";
 import { IChatItem } from "../interfaces/chatItem";
-import { View, FlatList, TouchableOpacity, Image, Text, TextInput, StyleSheet, Dimensions } from "react-native";
+import { View, FlatList, TouchableOpacity, Image, Text, TextInput, StyleSheet, Dimensions, Keyboard, EmitterSubscription } from "react-native";
 import { IMessage } from "../interfaces/firebase/message";
 import { backendService } from "../../src/services/backend";
 import Icon from 'react-native-vector-icons/Ionicons';
 import Colors from "../constants/Colors";
 import { Subscription } from 'rxjs'
 
-interface IProps { }
+interface IProps { show: boolean }
 
 interface IState {
     chatItems: IChatItem[]
@@ -15,14 +15,17 @@ interface IState {
         chatItem: IChatItem
         messages: IMessage[]
     }
+    keyboardOpen?: boolean
 }
 
 export class ChatScreen extends React.Component<IProps, IState> {
-    getChatItemsSub: Subscription
-    getDetailSub: Subscription
     textInput: TextInput
     text: string
     scrollView: FlatList<any>
+    keyboardDidShowSub: EmitterSubscription
+    keyboardDidHideSub: EmitterSubscription
+    getChatItemsSub: Subscription
+    getDetailSub: Subscription
 
     constructor(props) {
         super(props)
@@ -34,11 +37,22 @@ export class ChatScreen extends React.Component<IProps, IState> {
             .subscribe(chatItems => this.setState({ chatItems }))
         this.getDetailSub = backendService.chat.getChatDetail$()
             .subscribe(item => this.setState({ detail: item }))
+        this.keyboardDidShowSub = Keyboard.addListener('keyboardDidShow',
+            () => this.setKeyboardStatus(true))
+        this.keyboardDidHideSub = Keyboard.addListener('keyboardDidHide',
+            () => this.setKeyboardStatus(false))
+    }
+
+    setKeyboardStatus(status: boolean) {
+        backendService.setKeyboardStatus$(status)
+        this.setState({ keyboardOpen: status })
     }
 
     componentWillUnmount() {
         if (this.getChatItemsSub) this.getChatItemsSub.unsubscribe()
         if (this.getDetailSub) this.getDetailSub.unsubscribe()
+        this.keyboardDidHideSub.remove()
+        this.keyboardDidShowSub.remove()
     }
 
     handleBack() {
@@ -57,6 +71,8 @@ export class ChatScreen extends React.Component<IProps, IState> {
 
     openChat(chatId: string) {
         backendService.chat.openChat(chatId)
+        this.getDetailSub = backendService.chat.getChatDetail$()
+            .subscribe(item => this.setState({ detail: item }))
     }
 
     render() {
@@ -67,7 +83,11 @@ export class ChatScreen extends React.Component<IProps, IState> {
         const content = this.state.detail ? this.Detail() : this.ChatList()
         return (
             <View
-                style={{ ...styles.chats, height: styles.chats.height }}>
+                style={{
+                    ...styles.chats,
+                    height: this.state.keyboardOpen ? Dimensions.get('screen').height - 420 : styles.chats.height,
+                    zIndex: this.props.show ? 1 : -1
+                }}>
                 {content}
             </View>
         )
@@ -120,7 +140,6 @@ export class ChatScreen extends React.Component<IProps, IState> {
     }
 
     Detail = () => {
-        this.state.detail.chatItem.id
         return (
             <View style={styles.detail}>
                 {this.ChatHeader()}
@@ -206,7 +225,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
         backgroundColor: '#202030', paddingVertical: 25, borderRadius: 40,
         width: Dimensions.get('window').width,
-        height: 430, top: Dimensions.get('window').height / 2 - 240 - 60
+        height: Dimensions.get('window').height * 0.7,
+        top: 0
     },
     chatTextInput: {
         color: 'white', flex: 1, paddingTop: 10, paddingLeft: 20
