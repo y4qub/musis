@@ -1,17 +1,18 @@
 import React from 'react'
-import { MapScreen } from './src/screens/MapScreen'
+import { MapScreen } from './screens/MapScreen'
 import {
   View, StyleSheet, Text, NativeEventEmitter,
-  EmitterSubscription, Linking, TouchableOpacity, TouchableWithoutFeedback
+  EmitterSubscription, Linking, TouchableOpacity
 } from 'react-native'
-import { BottomBar } from './src/components/BottomBar'
-import { Tab } from './src/interfaces/tab'
-import SpotifyModule from './src/services/SpotifyModule'
-import { ChatScreen } from './src/screens/ChatScreen'
-import { backendService } from './src/services/backend'
-import { LoginScreen } from './src/screens/LoginScreen'
+import { BottomBar } from './components/BottomBar'
+import { Tab } from './interfaces/tab'
+import SpotifyModule from './services/SpotifyModule'
+import { ChatScreen } from './screens/ChatScreen'
+import { backendService } from './services/backend'
+import { LoginScreen } from './screens/LoginScreen'
 import { Subscription } from 'rxjs'
 import Icon from 'react-native-vector-icons/Ionicons';
+import Colors from './constants/Colors'
 
 interface IProps { }
 
@@ -105,7 +106,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#202030'
+    backgroundColor: Colors.primaryBg
   },
   appTitle: {
     fontSize: 40,
@@ -118,7 +119,7 @@ const styles = StyleSheet.create({
     height: 56, width: 56,
     justifyContent: "center",
     alignItems: 'center',
-    backgroundColor: '#202030',
+    backgroundColor: Colors.primaryBg,
     position: "absolute",
     top: 15,
     right: 15

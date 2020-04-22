@@ -4,7 +4,6 @@ import '@react-native-firebase/auth';
 import { ISong } from '../interfaces/song'
 import { Subject, Observable } from 'rxjs'
 import { flatMap, switchMap } from 'rxjs/operators'
-import { Location } from '../interfaces/location'
 import { IMessage } from '../interfaces/firebase/message'
 import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
@@ -140,12 +139,17 @@ class BackendService {
             const geopoint = new firebase.firestore.GeoPoint(location.coords.latitude, location.coords.longitude)
             return this.getUser(this.user.getUid()).set({ location: geopoint }, { merge: true })
         },
-        createUser: async (email: string, password: string, username: string) => {
-            if (!email || !password || !username) return
-            const loginRef = await firebase.auth().createUserWithEmailAndPassword(email, password)
-            const uid = loginRef.user.uid
-            await this.getUser(uid).set({ uid: uid, name: username })
-            return loginRef
+        createUser: (email: string, password: string, username: string) => {
+            return new Promise((resolve, reject) => {
+                if (!email || !password || !username) return
+                firebase.auth().createUserWithEmailAndPassword(email, password)
+                    .then(loginRef => {
+                        const uid = loginRef.user.uid
+                        this.getUser(uid).set({ uid: uid, name: username })
+                        resolve(loginRef)
+                    })
+                    .catch(error => reject(error))
+            })
         },
         signInWithEmailAndPassword: (email: string, password: string) => {
             if (!email || !password) return

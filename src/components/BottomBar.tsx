@@ -3,6 +3,7 @@ import React from "react";
 import { Tab } from "../interfaces/tab";
 import Icon from 'react-native-vector-icons/Ionicons';
 import { backendService } from "../services/backend";
+import Colors from "../constants/Colors";
 
 interface IProps {
     activeTab: Tab
@@ -27,7 +28,7 @@ export class BottomBar extends React.Component<IProps, IState> {
     }
 
     bottomBar = () => {
-        const exploreColor = this.props?.activeTab == 'explore' ? '#FF7674' : '#2C2C41'
+        const exploreColor = this.props?.activeTab == 'explore' ? Colors.primary : '#2C2C41'
         const profileColor = this.props?.activeTab == 'chats' ? '#309EFF' : '#2C2C41'
         const tabName = this.props.activeTab.charAt(0).toUpperCase() + this.props.activeTab.substring(1)
         return (<View style={styles.tabBar}>
@@ -58,7 +59,7 @@ export class BottomBar extends React.Component<IProps, IState> {
 
 const styles = StyleSheet.create({
     tabBar: {
-        flexDirection: 'row', backgroundColor: '#202030', borderRadius: 38, height: 82,
+        flexDirection: 'row', backgroundColor: Colors.primaryBg, borderRadius: 38, height: 82,
         width: 263, marginBottom: 40, justifyContent: "space-between", alignItems: 'center',
         paddingHorizontal: 15
     },

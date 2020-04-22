@@ -16,6 +16,7 @@ interface IState {
         messages: IMessage[]
     }
     keyboardOpen?: boolean
+    keyboardHeight: number
 }
 
 export class ChatScreen extends React.Component<IProps, IState> {
@@ -29,7 +30,7 @@ export class ChatScreen extends React.Component<IProps, IState> {
 
     constructor(props) {
         super(props)
-        this.state = { chatItems: [] }
+        this.state = { chatItems: [], keyboardHeight: 0 }
     }
 
     componentDidMount() {
@@ -38,9 +39,15 @@ export class ChatScreen extends React.Component<IProps, IState> {
         this.getDetailSub = backendService.chat.getChatDetail$()
             .subscribe(item => this.setState({ detail: item }))
         this.keyboardDidShowSub = Keyboard.addListener('keyboardDidShow',
-            () => this.setKeyboardStatus(true))
+            event => {
+                this.setKeyboardStatus(true)
+                this.setState({ keyboardHeight: event.endCoordinates.height })
+            })
         this.keyboardDidHideSub = Keyboard.addListener('keyboardDidHide',
-            () => this.setKeyboardStatus(false))
+            event => {
+                this.setKeyboardStatus(false)
+                this.setState({ keyboardHeight: 0 })
+            })
     }
 
     setKeyboardStatus(status: boolean) {
@@ -63,6 +70,7 @@ export class ChatScreen extends React.Component<IProps, IState> {
         if (!this.text) return
         const formattedText = this.text.replace(/\s/g, '')
         if (formattedText) {
+            Keyboard.dismiss()
             backendService.chat.sendMessage(formattedText, this.state.detail.chatItem.id)
             this.text = null
             this.textInput.clear()
@@ -71,8 +79,6 @@ export class ChatScreen extends React.Component<IProps, IState> {
 
     openChat(chatId: string) {
         backendService.chat.openChat(chatId)
-        this.getDetailSub = backendService.chat.getChatDetail$()
-            .subscribe(item => this.setState({ detail: item }))
     }
 
     render() {
@@ -85,7 +91,7 @@ export class ChatScreen extends React.Component<IProps, IState> {
             <View
                 style={{
                     ...styles.chats,
-                    height: this.state.keyboardOpen ? Dimensions.get('screen').height - 420 : styles.chats.height,
+                    height: this.state.keyboardOpen ? Dimensions.get('window').height - this.state.keyboardHeight : styles.chats.height,
                     zIndex: this.props.show ? 1 : -1
                 }}>
                 {content}
@@ -110,9 +116,15 @@ export class ChatScreen extends React.Component<IProps, IState> {
             <TouchableOpacity
                 style={styles.chatItem}
                 onPress={() => this.openChat(item.id)}>
-                <Image
+                {item.profilePicture ? <Image
                     source={{ uri: item.profilePicture, width: 50, height: 50 }}
-                    style={styles.profilePicture} />
+                    style={styles.profilePicture} /> :
+                    <View style={{
+                        ...styles.profilePicture,
+                        width: 50,
+                        height: 50
+                    }}></View>
+                }
                 <View>
                     <Text style={styles.chatItemTitle}>{item.name}</Text>
                     <Text style={styles.chatItemSubtitle}>{item.lastMessage}</Text>
@@ -223,7 +235,7 @@ const styles = StyleSheet.create({
     },
     chats: {
         position: 'absolute',
-        backgroundColor: '#202030', paddingVertical: 25, borderRadius: 40,
+        backgroundColor: Colors.primaryBg, paddingVertical: 25, borderRadius: 40,
         width: Dimensions.get('window').width,
         height: Dimensions.get('window').height * 0.7,
         top: 0
