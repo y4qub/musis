@@ -53,9 +53,12 @@ export class MapScreen extends React.Component<IProps, IState> {
                 this.setState({ users: data })
             })
         if (!permisson) return
+        Geolocation.getCurrentPosition(location => {
+            this.centerMap(location)
+        })
         this.watchId = Geolocation.watchPosition(newLocation => {
             this.updateLocation(newLocation)
-        }, () => { }, { distanceFilter: 10 })
+        }, () => { }, { distanceFilter: 20 })
     }
 
     componentWillUnmount() {
@@ -70,7 +73,8 @@ export class MapScreen extends React.Component<IProps, IState> {
         if (!permission) {
             const status = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)
             if (status !== PermissionsAndroid.RESULTS.GRANTED) {
-                Alert.alert('Location disabled', 'You need to enable your location in order to use this app!')
+                Alert.alert('Location disabled',
+                    'You need to enable your location in order to use this app!')
                 return false
             } else {
                 return true
@@ -93,11 +97,15 @@ export class MapScreen extends React.Component<IProps, IState> {
             }
         })
         backendService.user.setLocation(location)
-        this.centerMap()
     }
 
-    centerMap() {
-        this.mapRef.animateToRegion(this.state.location)
+    centerMap(location: Geolocation.GeoPosition) {
+        this.mapRef.animateCamera({
+            center: {
+                latitude: location?.coords?.latitude,
+                longitude: location?.coords?.longitude
+            }
+        })
     }
 
     getMarkers() {
@@ -128,7 +136,6 @@ export class MapScreen extends React.Component<IProps, IState> {
                 ref={map => this.mapRef = map}
                 style={styles.map}
                 showsUserLocation={false}
-                region={this.state.location}
                 customMapStyle={mapStyle}
                 provider="google"
                 followsUserLocation={false}

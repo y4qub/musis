@@ -96,7 +96,7 @@ class BackendService {
             case 3:
                 color = '#40E0D0'; break;
             case 4:
-                color = '#FFFFE0'; break;
+                color = 'yellow'; break;
             case 5:
                 color = '#F08080'; break;
             case 6:
@@ -106,7 +106,7 @@ class BackendService {
             case 8:
                 color = '#DDA0DD'; break;
             case 9:
-                color = '#F5F5DC'; break;
+                color = 'pink'; break;
             case 10:
                 color = '#F4A460'; break;
         }

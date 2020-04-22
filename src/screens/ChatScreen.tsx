@@ -102,12 +102,14 @@ export class ChatScreen extends React.Component<IProps, IState> {
     chatListRenderItem = ({ item }) => this.ChatItem(item)
 
     ChatList = () => {
+        const noChats = this.state.chatItems?.length == 0
         return (
-            <FlatList
-                removeClippedSubviews={true}
-                data={this.state.chatItems}
-                renderItem={this.chatListRenderItem}
-                keyExtractor={(item, index) => index.toString()} />
+            noChats ? <Text style={styles.noChatsLabel}>No chats</Text> :
+                <FlatList
+                    removeClippedSubviews={true}
+                    data={this.state.chatItems}
+                    renderItem={this.chatListRenderItem}
+                    keyExtractor={(item, index) => index.toString()} />
         )
     }
 
@@ -250,5 +252,6 @@ const styles = StyleSheet.create({
     },
     chatHeaderTitle: {
         flexDirection: 'row', justifyContent: 'center', alignItems: 'center'
-    }
+    },
+    noChatsLabel: { textAlign: 'center', color: 'white', marginTop: 20, fontSize: 17 }
 })
