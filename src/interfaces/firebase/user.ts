@@ -9,5 +9,5 @@ export interface IUser {
     }
     name: string
     uid: string
-    color?: string
+    color: string
 }

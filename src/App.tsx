@@ -66,7 +66,6 @@ export default class App extends React.Component<IProps, IState> {
 
   render() {
     const loaded = this.state.loggedIn != null && this.state.spotifyConnected != null
-    // const auth = this.state.loggedIn && this.state.spotifyConnected
     const auth = this.state.loggedIn
     return (
       loaded ? (auth ? <this.InnerScreen /> : <LoginScreen />) : null

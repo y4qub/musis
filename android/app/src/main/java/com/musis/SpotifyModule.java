@@ -162,7 +162,7 @@ public class SpotifyModule extends ReactContextBaseJavaModule {
                         } else if (error instanceof CouldNotFindSpotifyApp) {
                             if(firstTimeWarning) InstallBtn.show();
                         } else {
-                            Log.d("MainActivity", error.getMessage());
+                            Log.d("MainActivity", "disconnected");
                         }
                         firstTimeWarning = false;
                     }

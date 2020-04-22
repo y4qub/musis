@@ -46,19 +46,17 @@ export class MapScreen extends React.Component<IProps, IState> {
             .map(data =>
                 data.docs.map(element => {
                     const user = element.data() as IUser
-                    user.color = backendService.generateRandomColor()
                     return user
                 })
             ).subscribe(data => {
                 this.setState({ users: data })
             })
         if (!permisson) return
-        Geolocation.getCurrentPosition(location => {
-            this.centerMap(location)
-        })
         this.watchId = Geolocation.watchPosition(newLocation => {
             this.updateLocation(newLocation)
         }, () => { }, { distanceFilter: 20 })
+        // Timeout needed because of buggy onMapReady event provided by the lib
+        setTimeout(() => this.centerMap(), 1500)
     }
 
     componentWillUnmount() {
@@ -69,6 +67,7 @@ export class MapScreen extends React.Component<IProps, IState> {
     }
 
     async checkPermission() {
+        // Location needs a permission from the user
         const permission = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)
         if (!permission) {
             const status = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)
@@ -99,22 +98,14 @@ export class MapScreen extends React.Component<IProps, IState> {
         backendService.user.setLocation(location)
     }
 
-    centerMap(location: Geolocation.GeoPosition) {
-        this.mapRef.animateCamera({
-            center: {
-                latitude: location?.coords?.latitude,
-                longitude: location?.coords?.longitude
-            }
-        })
-    }
-
-    getMarkers() {
-        return this.state.users.map((user, index) => {
-            if (user.uid == backendService.user.getUid()) return
-            return <PlayerIcon
-                user={user}
-                color={user.color}
-                key={index} />
+    centerMap() {
+        Geolocation.getCurrentPosition(location => {
+            this.mapRef.animateCamera({
+                center: {
+                    latitude: location?.coords?.latitude,
+                    longitude: location?.coords?.longitude
+                }
+            })
         })
     }
 
@@ -139,7 +130,6 @@ export class MapScreen extends React.Component<IProps, IState> {
                 customMapStyle={mapStyle}
                 provider="google"
                 followsUserLocation={false}
-                maxZoomLevel={10}
                 minZoomLevel={4}
                 toolbarEnabled={false}
                 showsCompass={false}
@@ -148,7 +138,13 @@ export class MapScreen extends React.Component<IProps, IState> {
                 showsIndoors={false}
                 rotateEnabled={false}
             >
-                {this.getMarkers()}
+                {this.state.users.map((user, index) => {
+                    if (user.uid == backendService.user.getUid()) return
+                    return <PlayerIcon
+                        user={user}
+                        color={user.color}
+                        key={index} />
+                })}
                 {userMarker}
             </MapView>
             {this.props.children}

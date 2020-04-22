@@ -20,9 +20,6 @@ class BackendService {
     private tab = new Subject<Tab>()
     private keyboardStatus = new Subject<boolean>()
     private song = new Subject<ISong>()
-    public getSong$ = () => {
-        return this.song.asObservable()
-    }
     private getUser = (uid: string) => {
         return firebase.firestore().doc(`users/${uid}`)
     }
@@ -83,7 +80,7 @@ class BackendService {
         const existingChats = chats.docs.filter(chat => chat.data().users.includes(uid2))
         return existingChats[0]?.data() as IChat
     }
-    public generateRandomColor = () => {
+    private generateRandomColor = () => {
         const random = Math.round(Math.random() * 10)
         var color: string
         switch (random) {
@@ -124,6 +121,9 @@ class BackendService {
     public setKeyboardStatus$ = (status: boolean) => {
         return this.keyboardStatus.next(status)
     }
+    public getSong$ = () => {
+        return this.song.asObservable()
+    }
     user = {
         getUsers$: (): Observable<FirebaseFirestoreTypes.QuerySnapshot> => {
             return Observable.create(observer =>
@@ -145,7 +145,7 @@ class BackendService {
                 firebase.auth().createUserWithEmailAndPassword(email, password)
                     .then(loginRef => {
                         const uid = loginRef.user.uid
-                        this.getUser(uid).set({ uid: uid, name: username })
+                        this.getUser(uid).set({ uid: uid, name: username, color: this.generateRandomColor() })
                         resolve(loginRef)
                     })
                     .catch(error => reject(error))

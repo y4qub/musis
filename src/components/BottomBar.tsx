@@ -14,8 +14,8 @@ interface IState { }
 
 export class BottomBar extends React.Component<IProps, IState> {
 
-    private iconSize = 28
-    private iconColor = 'white'
+    iconSize = 28
+    iconColor = 'white'
 
     constructor(props) {
         super(props)
