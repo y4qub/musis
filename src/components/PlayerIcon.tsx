@@ -21,6 +21,7 @@ export class PlayerIcon extends React.Component<IProps, IState> {
     }
 
     render() {
+        // Spotify Native SDK ImageApi working as expected (workaround)
         const imageUrl =
             `https://i.scdn.co/image/${this.props.user.song?.coverUrl?.split(':')[2]}`
         return (
@@ -41,48 +42,48 @@ export class PlayerIcon extends React.Component<IProps, IState> {
                             width: 50,
                             height: 50
                         }} style={styles.coverImage}
-                            fadeDuration={0}
                         /> : <Icon name={'md-person'} size={30} color={'gray'} />}
                 </View>
                 <View style={{ ...styles.triangle, borderBottomColor: this.props.color }}></View>
-                {this.props.user.song ? <Callout
-                    style={{
-                        ...styles.callout,
-                        width: this.props.localUser ?
-                            Dimensions.get('screen').width * 0.7 : styles.callout.width
-                    }}
-                    tooltip={true}
-                    onPress={() => this.props.localUser ? null : this.startChat()}
-                >
-                    <View
-                        style={styles.playerWidget}>
-                        <Image source={{
-                            uri: imageUrl,
-                            width: 80,
-                            height: 80,
-                        }} style={styles.calloutImage} resizeMode={'cover'}
-                        />
-                        <View>
-                            <Text
-                                style={{ fontFamily: 'MavenProBold', color: this.props.color, marginBottom: 5 }}
-                            >
-                                NOW PLAYING
+                {this.props.user.song ?
+                    // Custom view when user clicks on the marker
+                    <Callout
+                        style={styles.callout}
+                        tooltip={true}
+                        onPress={() => this.props.localUser ? null : this.startChat()}
+                    >
+                        <View
+                            style={{
+                                ...styles.playerWidget,
+                                justifyContent: this.props.localUser ? 'space-around' : styles.playerWidget.justifyContent
+                            }}>
+                            <Image source={{
+                                uri: imageUrl,
+                                width: 80,
+                                height: 80,
+                            }} style={styles.calloutImage} resizeMode={'cover'}
+                            />
+                            <View>
+                                <Text
+                                    style={{ fontFamily: 'MavenProBold', color: this.props.color, marginBottom: 5 }}
+                                >
+                                    NOW PLAYING
                         </Text>
-                            <Text
-                                style={{ fontFamily: 'MavenProRegular', color: 'white', fontSize: 16 }}
-                            >
-                                {this.props.user.song?.name}
-                            </Text>
-                            <Text
-                                style={{ fontFamily: 'MavenProBold', color: 'white' }}
-                            >
-                                {this.props.user.song?.artist}
-                            </Text>
+                                <Text
+                                    style={{ fontFamily: 'MavenProRegular', color: 'white', fontSize: 16 }}
+                                >
+                                    {this.props.user.song?.name}
+                                </Text>
+                                <Text
+                                    style={{ fontFamily: 'MavenProBold', color: 'white' }}
+                                >
+                                    {this.props.user.song?.artist}
+                                </Text>
+                            </View>
+                            {this.props.localUser ?
+                                null : <Icon name={'md-chatbubbles'} size={30} color={this.props.color} />}
                         </View>
-                        {this.props.localUser ?
-                            null : <Icon name={'md-chatbubbles'} size={30} color={this.props.color} />}
-                    </View>
-                </Callout> : null}
+                    </Callout> : null}
 
 
             </Marker> : null
@@ -94,7 +95,7 @@ export class PlayerIcon extends React.Component<IProps, IState> {
 
 const styles = StyleSheet.create({
     calloutImage: { borderRadius: 50, zIndex: 999, marginLeft: 10 },
-    coverImage: { borderRadius: 50, zIndex: 999 },
+    coverImage: { borderRadius: 50, zIndex: 999, backgroundColor: 'gray' },
     playerWidget: {
         ...StyleSheet.absoluteFillObject,
         borderRadius: 40,

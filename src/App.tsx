@@ -2,7 +2,7 @@ import React from 'react'
 import { MapScreen } from './screens/MapScreen'
 import {
   View, StyleSheet, Text, NativeEventEmitter,
-  EmitterSubscription, Linking, TouchableOpacity
+  EmitterSubscription, Linking, TouchableOpacity, StatusBar
 } from 'react-native'
 import { BottomBar } from './components/BottomBar'
 import { Tab } from './interfaces/tab'
@@ -19,12 +19,10 @@ interface IProps { }
 interface IState {
   activeTab: Tab,
   loggedIn?: boolean,
-  spotifyConnected?: boolean,
   keyboardStatus?: boolean
 }
 
 export default class App extends React.Component<IProps, IState> {
-  spotifySdk: EmitterSubscription
   playbackStateListener: EmitterSubscription
   authStateSub: Subscription
   tabSub: Subscription
@@ -37,13 +35,12 @@ export default class App extends React.Component<IProps, IState> {
   }
 
   componentDidMount() {
+    // Connect to the Native Module to control the Spotify SDK
     const spotifyEventEmitter = new NativeEventEmitter(SpotifyModule)
+    // Update song
     this.playbackStateListener = spotifyEventEmitter.addListener('playerStateChanged', event => {
       if (!this.state.loggedIn) return
       backendService.user.setSong({ artist: event.artist, name: event.name, coverUrl: event.cover_url })
-    })
-    this.playbackStateListener = spotifyEventEmitter.addListener('status', event => {
-      this.setState({ spotifyConnected: event.status == 'connected' })
     })
     this.authStateSub = backendService.user.authState.subscribe(user => {
       this.setState({ loggedIn: user ? true : false })
@@ -54,21 +51,21 @@ export default class App extends React.Component<IProps, IState> {
     this.keyboardOpenSub = backendService.getKeyboardStatus$().subscribe(status => {
       this.setState({ keyboardStatus: status })
     })
+    StatusBar.setHidden(true)
   }
 
   componentWillUnmount() {
-    if (this.spotifySdk) this.spotifySdk.remove()
-    this.tabSub.unsubscribe()
-    this.authStateSub.unsubscribe()
-    this.playbackStateListener.remove()
-    this.keyboardOpenSub.unsubscribe()
+    this.tabSub?.unsubscribe()
+    this.authStateSub?.unsubscribe()
+    this.keyboardOpenSub?.unsubscribe()
+    this.playbackStateListener?.remove()
   }
 
   render() {
-    const loaded = this.state.loggedIn != null && this.state.spotifyConnected != null
-    const auth = this.state.loggedIn
+    const loaded = this.state.loggedIn != null
+    const loggedIn = this.state.loggedIn
     return (
-      loaded ? (auth ? <this.InnerScreen /> : <LoginScreen />) : null
+      loggedIn ? <this.InnerScreen /> : <LoginScreen loaded={loaded} />
     )
   }
 
@@ -77,8 +74,8 @@ export default class App extends React.Component<IProps, IState> {
       <View style={styles.container}>
         <MapScreen />
         <View style={styles.appTitle}>
-        <Text style={styles.appTitleText}>MUSIS</Text>
-        {this.LogoutButton()}
+          <Text style={styles.appTitleText}>MUSIS</Text>
+          {this.LogoutButton()}
         </View>
         <ChatScreen show={this.state.activeTab == 'chats'} />
         <BottomBar activeTab={this.state.activeTab} show={!this.state.keyboardStatus} />
@@ -96,10 +93,6 @@ export default class App extends React.Component<IProps, IState> {
     )
   }
 
-  async getUrlAsync() {
-    return Linking.getInitialURL()
-  }
-
 }
 
 const styles = StyleSheet.create({
@@ -114,13 +107,17 @@ const styles = StyleSheet.create({
     color: 'white',
     fontFamily: 'MavenProBold'
   },
-  appTitle: {flexDirection: 'row', marginTop: 35},
+  appTitle: {
+    flexDirection: 'row',
+    marginTop: 35
+  },
   logoutButton: {
     borderRadius: 50,
     height: 56, width: 56,
     justifyContent: "center",
     alignItems: 'center',
     backgroundColor: Colors.primaryBg,
-    marginLeft: 25
+    marginLeft: 25,
+    right: 10
   }
 })

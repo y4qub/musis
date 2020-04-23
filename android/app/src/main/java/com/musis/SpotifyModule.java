@@ -88,11 +88,6 @@ public class SpotifyModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private void exitAction(DialogInterface dialog, int which) {
-        Objects.requireNonNull(getCurrentActivity()).finish();
-        System.exit(0);
-    }
-
     private void spotifyLoginAction(DialogInterface dialog, int which) {
         try {
             Uri uri = Uri.parse("spotify:");
@@ -103,11 +98,13 @@ public class SpotifyModule extends ReactContextBaseJavaModule {
         }
     }
 
+    // Sends events back to JS
     private void sendEvent(String eventName, @Nullable WritableMap params) {
         reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
                 .emit(eventName, params);
     }
 
+    // Can be called from JS
     @ReactMethod
     public void connect() {
         ConnectionParams connectionParams =

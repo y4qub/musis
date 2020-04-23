@@ -23,12 +23,14 @@ class BackendService {
     private getUser = (uid: string) => {
         return firebase.firestore().doc(`users/${uid}`)
     }
+    // Converts Firebase SDK observable to RxJS
     private _getChat$ = (chatId: string): Observable<FirebaseFirestoreTypes.QueryDocumentSnapshot> => {
         return Observable.create(observer =>
             this.getChat(chatId)
                 .onSnapshot({ next: data => observer.next(data) })
         )
     }
+    // Converts Firebase SDK observable to RxJS
     private _getChats$ = (): Observable<FirebaseFirestoreTypes.QuerySnapshot> => {
         return Observable.create(observer =>
             firebase.firestore().collection(`chats`)
@@ -201,6 +203,7 @@ class BackendService {
                         const otherUserUid = users.filter(uid => uid != this.user.getUid())[0]
                         const otherUser = (await this.getUser(otherUserUid).get())?.data() as IUser
                         if (!otherUser) continue
+                        // Compose chatItem
                         const chatItem: IChatItem = {
                             lastMessage: chat.data().lastMessage,
                             name: otherUser.name,

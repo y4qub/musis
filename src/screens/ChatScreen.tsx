@@ -1,11 +1,12 @@
 import React from "react";
 import { IChatItem } from "../interfaces/chatItem";
-import { View, FlatList, TouchableOpacity, Image, Text, TextInput, StyleSheet, Dimensions, Keyboard, EmitterSubscription } from "react-native";
+import { View, FlatList, TouchableOpacity, Image, Text, TextInput, StyleSheet, Dimensions, Keyboard, EmitterSubscription, NativeEventSubscription, Alert } from "react-native";
 import { IMessage } from "../interfaces/firebase/message";
 import { backendService } from "../../src/services/backend";
 import Icon from 'react-native-vector-icons/Ionicons';
 import Colors from "../constants/Colors";
 import { Subscription } from 'rxjs'
+import { BackHandler } from 'react-native';
 
 interface IProps { show: boolean }
 
@@ -27,6 +28,7 @@ export class ChatScreen extends React.Component<IProps, IState> {
     keyboardDidHideSub: EmitterSubscription
     getChatItemsSub: Subscription
     getDetailSub: Subscription
+    backHandlerSub: NativeEventSubscription
 
     constructor(props) {
         super(props)
@@ -48,6 +50,32 @@ export class ChatScreen extends React.Component<IProps, IState> {
                 this.setKeyboardStatus(false)
                 this.setState({ keyboardHeight: 0 })
             })
+        // Prevent Android back button from closing the app
+        this.backHandlerSub = BackHandler.addEventListener('hardwareBackPress', () => {
+            if (this.state.detail) {
+                this.handleBack()
+            } else {
+                if (this.props.show) {
+                    backendService.changeTab('explore')
+                } else {
+                    Alert.alert(
+                        'Confirm exit',
+                        'Do you want to quit the app?',
+                        [{ text: 'CANCEL', style: 'cancel' },
+                        { text: 'OK', onPress: () => BackHandler.exitApp() }]
+                    )
+                }
+            }
+            return true
+        })
+    }
+
+    componentWillUnmount() {
+        this.getChatItemsSub?.unsubscribe()
+        this.getDetailSub?.unsubscribe()
+        this.keyboardDidHideSub?.remove()
+        this.keyboardDidShowSub?.remove()
+        this.backHandlerSub?.remove()
     }
 
     setKeyboardStatus(status: boolean) {
@@ -55,26 +83,17 @@ export class ChatScreen extends React.Component<IProps, IState> {
         this.setState({ keyboardOpen: status })
     }
 
-    componentWillUnmount() {
-        if (this.getChatItemsSub) this.getChatItemsSub.unsubscribe()
-        if (this.getDetailSub) this.getDetailSub.unsubscribe()
-        this.keyboardDidHideSub.remove()
-        this.keyboardDidShowSub.remove()
-    }
-
     handleBack() {
         this.setState({ detail: null })
     }
 
     sendMessage = () => {
-        if (!this.text) return
-        const formattedText = this.text.replace(/\s/g, '')
-        if (formattedText) {
-            Keyboard.dismiss()
-            backendService.chat.sendMessage(formattedText, this.state.detail.chatItem.id)
-            this.text = null
-            this.textInput.clear()
-        }
+        Keyboard.dismiss()
+        this.textInput.clear()
+        const trimmedText = this.text?.trim()
+        if (!this.text || trimmedText == '') return
+        backendService.chat.sendMessage(trimmedText, this.state.detail.chatItem.id)
+        this.text = null
     }
 
     openChat(chatId: string) {
@@ -114,12 +133,15 @@ export class ChatScreen extends React.Component<IProps, IState> {
     }
 
     ChatItem = (item: IChatItem) => {
+        // Spotify Native SDK ImageApi working as expected (workaround)
+        const imageUrl =
+            `https://i.scdn.co/image/${item.profilePicture?.split(':')[2]}`
         return (
             <TouchableOpacity
                 style={styles.chatItem}
                 onPress={() => this.openChat(item.id)}>
                 {item.profilePicture ? <Image
-                    source={{ uri: item.profilePicture, width: 50, height: 50 }}
+                    source={{ uri: imageUrl, width: 50, height: 50 }}
                     style={styles.profilePicture} /> :
                     <View style={{
                         ...styles.profilePicture,
@@ -136,6 +158,9 @@ export class ChatScreen extends React.Component<IProps, IState> {
     }
 
     ChatHeader = () => {
+        // Spotify Native SDK ImageApi working as expected (workaround)
+        const imageUrl =
+            `https://i.scdn.co/image/${this.state.detail.chatItem.profilePicture?.split(':')[2]}`
         return (
             <View style={styles.chatHeader}>
                 <TouchableOpacity
@@ -145,8 +170,8 @@ export class ChatScreen extends React.Component<IProps, IState> {
                 </TouchableOpacity>
                 <View style={styles.chatHeaderTitle}>
                     <Image
-                        source={{ uri: this.state.detail.chatItem.profilePicture, width: 50, height: 50 }}
-                        style={{ ...styles.profilePicture }} />
+                        source={{ uri: imageUrl, width: 50, height: 50 }}
+                        style={styles.profilePicture} />
                     <Text style={styles.chatItemTitle}>{this.state.detail.chatItem.name}</Text>
                 </View>
             </View>
@@ -194,6 +219,7 @@ export class ChatScreen extends React.Component<IProps, IState> {
                     style={styles.chatTextInput}
                     placeholder='Your message...'
                     placeholderTextColor='rgba(255, 255, 255, 0.7)'
+                    returnKeyType={'send'}
                     onChangeText={value => this.text = value}
                     onSubmitEditing={() => this.sendMessage()}
                     ref={input => { this.textInput = input }} />

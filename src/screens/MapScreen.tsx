@@ -14,7 +14,7 @@ interface IProps { }
 
 interface IState {
     users: IUser[]
-    location: Region
+    location?: Region
     song?: ISong
 }
 
@@ -24,16 +24,18 @@ export class MapScreen extends React.Component<IProps, IState> {
     mapRef: MapView
     getSongSub: Subscription
     getUsersSub: Subscription
+    getTabSub: Subscription
+    firstGeolocEmit = true
+    initialLoc: Region = {
+        latitude: 49,
+        longitude: 18,
+        latitudeDelta: 20,
+        longitudeDelta: 20
+    }
 
     constructor(props) {
         super(props)
         this.state = {
-            location: {
-                latitude: 49,
-                longitude: 18,
-                latitudeDelta: 20,
-                longitudeDelta: 20
-            },
             users: []
         }
     }
@@ -53,17 +55,25 @@ export class MapScreen extends React.Component<IProps, IState> {
             })
         if (!permisson) return
         this.watchId = Geolocation.watchPosition(newLocation => {
+            // Center the map after the first device location is received
+            if (this.firstGeolocEmit) {
+                this.centerMap()
+                this.firstGeolocEmit = false
+            }
             this.updateLocation(newLocation)
         }, () => { }, { distanceFilter: 20 })
-        // Timeout needed because of buggy onMapReady event provided by the lib
-        setTimeout(() => this.centerMap(), 1500)
+        // Center the map when user clicks on the tab
+        this.getTabSub = backendService.getTab$().subscribe(tab => {
+            if (tab == 'explore') this.centerMap()
+        })
     }
 
     componentWillUnmount() {
         this._mounted = false
         Geolocation.clearWatch(this.watchId)
-        this.getSongSub.unsubscribe()
-        this.getUsersSub.unsubscribe()
+        this.getSongSub?.unsubscribe()
+        this.getUsersSub?.unsubscribe()
+        this.getTabSub?.unsubscribe()
     }
 
     async checkPermission() {
@@ -84,15 +94,17 @@ export class MapScreen extends React.Component<IProps, IState> {
     }
 
     updateLocation(location: Geolocation.GeoPosition) {
-        if (location.coords.latitude == this.state.location.latitude
-            && location.coords.longitude == this.state.location.longitude) return
+        if (location.coords.latitude == this.state.location?.latitude
+            && location.coords.longitude == this.state.location?.longitude) return
         if (!this._mounted) return
         this.setState({
             location: {
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
-                latitudeDelta: this.state.location.latitudeDelta,
-                longitudeDelta: this.state.location.longitudeDelta
+                latitudeDelta:
+                    this.state.location ? this.state.location.latitudeDelta : this.initialLoc.latitudeDelta,
+                longitudeDelta:
+                    this.state.location ? this.state.location.longitudeDelta : this.initialLoc.longitudeDelta,
             }
         })
         backendService.user.setLocation(location)
@@ -110,18 +122,6 @@ export class MapScreen extends React.Component<IProps, IState> {
     }
 
     render() {
-        const userMarker = <PlayerIcon
-            user={{
-                color: 'white',
-                location:
-                    new firebase.firestore.GeoPoint(this.state.location.latitude, this.state.location.longitude),
-                name: '',
-                uid: backendService.user.getUid(),
-                song: this.state.song
-            }}
-            color={'white'}
-            key={-1}
-            localUser={true} />
         return (<>
             <MapView
                 ref={map => this.mapRef = map}
@@ -131,13 +131,17 @@ export class MapScreen extends React.Component<IProps, IState> {
                 provider="google"
                 followsUserLocation={false}
                 minZoomLevel={4}
+                maxZoomLevel={15}
                 toolbarEnabled={false}
                 showsCompass={false}
                 showsTraffic={false}
                 showsBuildings={false}
                 showsIndoors={false}
                 rotateEnabled={false}
+                initialRegion={this.initialLoc}
+                cacheEnabled={true}
             >
+                {/* Other users */}
                 {this.state.users.map((user, index) => {
                     if (user.uid == backendService.user.getUid()) return
                     return <PlayerIcon
@@ -145,7 +149,22 @@ export class MapScreen extends React.Component<IProps, IState> {
                         color={user.color}
                         key={index} />
                 })}
-                {userMarker}
+                {this.state.location ?
+                    // Marker of the local user
+                    <PlayerIcon
+                        user={{
+                            color: 'white',
+                            location:
+                                new firebase.firestore.GeoPoint(
+                                    this.state.location?.latitude, this.state.location?.longitude),
+                            name: '',
+                            uid: backendService.user.getUid(),
+                            song: this.state.song
+                        }}
+                        color={'white'}
+                        key={-1}
+                        localUser={true} />
+                    : null}
             </MapView>
             {this.props.children}
         </>)
