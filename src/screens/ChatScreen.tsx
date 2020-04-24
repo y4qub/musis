@@ -1,12 +1,11 @@
 import React from "react";
 import { IChatItem } from "../interfaces/chatItem";
-import { View, FlatList, TouchableOpacity, Image, Text, TextInput, StyleSheet, Dimensions, Keyboard, EmitterSubscription, NativeEventSubscription, Alert } from "react-native";
+import { View, FlatList, TouchableOpacity, Image, Text, TextInput, StyleSheet, Dimensions, Keyboard, EmitterSubscription } from "react-native";
 import { IMessage } from "../interfaces/firebase/message";
 import { backendService } from "../../src/services/backend";
 import Icon from 'react-native-vector-icons/Ionicons';
 import Colors from "../constants/Colors";
 import { Subscription } from 'rxjs'
-import { BackHandler } from 'react-native';
 
 interface IProps { show: boolean }
 
@@ -28,7 +27,6 @@ export class ChatScreen extends React.Component<IProps, IState> {
     keyboardDidHideSub: EmitterSubscription
     getChatItemsSub: Subscription
     getDetailSub: Subscription
-    backHandlerSub: NativeEventSubscription
 
     constructor(props) {
         super(props)
@@ -50,24 +48,6 @@ export class ChatScreen extends React.Component<IProps, IState> {
                 this.setKeyboardStatus(false)
                 this.setState({ keyboardHeight: 0 })
             })
-        // Prevent Android back button from closing the app
-        this.backHandlerSub = BackHandler.addEventListener('hardwareBackPress', () => {
-            if (this.state.detail) {
-                this.handleBack()
-            } else {
-                if (this.props.show) {
-                    backendService.changeTab('explore')
-                } else {
-                    Alert.alert(
-                        'Confirm exit',
-                        'Do you want to quit the app?',
-                        [{ text: 'CANCEL', style: 'cancel' },
-                        { text: 'OK', onPress: () => BackHandler.exitApp() }]
-                    )
-                }
-            }
-            return true
-        })
     }
 
     componentWillUnmount() {
@@ -75,7 +55,6 @@ export class ChatScreen extends React.Component<IProps, IState> {
         this.getDetailSub?.unsubscribe()
         this.keyboardDidHideSub?.remove()
         this.keyboardDidShowSub?.remove()
-        this.backHandlerSub?.remove()
     }
 
     setKeyboardStatus(status: boolean) {
@@ -84,7 +63,7 @@ export class ChatScreen extends React.Component<IProps, IState> {
     }
 
     handleBack() {
-        this.setState({ detail: null })
+        backendService.chat.closeChat()
     }
 
     sendMessage = () => {

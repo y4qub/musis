@@ -2,7 +2,7 @@ import firebase from '@react-native-firebase/app'
 import '@react-native-firebase/firestore';
 import '@react-native-firebase/auth';
 import { ISong } from '../interfaces/song'
-import { Subject, Observable } from 'rxjs'
+import { Subject, Observable, BehaviorSubject } from 'rxjs'
 import { flatMap, switchMap, share } from 'rxjs/operators'
 import { IMessage } from '../interfaces/firebase/message'
 import { FirebaseAuthTypes } from '@react-native-firebase/auth';
@@ -16,8 +16,8 @@ import Geolocation from 'react-native-geolocation-service';
 
 class BackendService {
     private authState = new Subject<FirebaseAuthTypes.User>()
-    private chatDetail = new Subject<string>()
-    private tab = new Subject<Tab>()
+    private chatDetail = new BehaviorSubject<string>(null)
+    private tab = new BehaviorSubject<Tab>('explore')
     private keyboardStatus = new Subject<boolean>()
     private song = new Subject<ISong>()
     private getUser = (uid: string) => {
@@ -185,11 +185,14 @@ class BackendService {
             backendService.changeTab('chats')
             this.chatDetail.next(chatId)
         },
+        closeChat: () => {
+            this.chatDetail.next(null)
+        },
         getChatDetail$: () => {
             return this.chatDetail.pipe(
                 share(),
                 switchMap(chatId => {
-                    return this._getChatDetail$(chatId)
+                    return chatId ? this._getChatDetail$(chatId) : Observable.of(null)
                 })
             )
         },

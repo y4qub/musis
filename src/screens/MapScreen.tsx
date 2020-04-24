@@ -57,7 +57,7 @@ export class MapScreen extends React.Component<IProps, IState> {
         this.watchId = Geolocation.watchPosition(newLocation => {
             // Center the map after the first device location is received
             if (this.firstGeolocEmit) {
-                this.centerMap()
+                this.centerMap(newLocation)
                 this.firstGeolocEmit = false
             }
             this.updateLocation(newLocation)
@@ -110,14 +110,22 @@ export class MapScreen extends React.Component<IProps, IState> {
         backendService.user.setLocation(location)
     }
 
-    centerMap() {
-        Geolocation.getCurrentPosition(location => {
-            this.mapRef.animateCamera({
-                center: {
-                    latitude: location?.coords?.latitude,
-                    longitude: location?.coords?.longitude
-                }
+    centerMap(location?: Geolocation.GeoPosition) {
+        if (location) {
+            this.goToPosition(location)
+        } else {
+            Geolocation.getCurrentPosition(newLocation => {
+                this.goToPosition(newLocation)
             })
+        }
+    }
+
+    goToPosition(location: Geolocation.GeoPosition) {
+        this.mapRef.animateCamera({
+            center: {
+                latitude: location?.coords?.latitude,
+                longitude: location?.coords?.longitude
+            }
         })
     }
 

@@ -2,7 +2,7 @@ import React from 'react'
 import { MapScreen } from './screens/MapScreen'
 import {
   View, StyleSheet, Text, NativeEventEmitter,
-  EmitterSubscription, Linking, TouchableOpacity, StatusBar
+  EmitterSubscription, TouchableOpacity, StatusBar, BackHandler, NativeEventSubscription, Alert
 } from 'react-native'
 import { BottomBar } from './components/BottomBar'
 import { Tab } from './interfaces/tab'
@@ -12,6 +12,7 @@ import { backendService } from './services/backend'
 import { LoginScreen } from './screens/LoginScreen'
 import { Subscription } from 'rxjs'
 import Icon from 'react-native-vector-icons/Ionicons';
+import RNExitApp from 'react-native-exit-app';
 import Colors from './constants/Colors'
 
 interface IProps { }
@@ -27,6 +28,7 @@ export default class App extends React.Component<IProps, IState> {
   authStateSub: Subscription
   tabSub: Subscription
   keyboardOpenSub: Subscription
+  backHandlerSub: NativeEventSubscription
   constructor(props: IProps) {
     super(props)
     this.state = {
@@ -52,12 +54,39 @@ export default class App extends React.Component<IProps, IState> {
       this.setState({ keyboardStatus: status })
     })
     StatusBar.setHidden(true)
+    this.handleBack()
+  }
+
+  // Prevent Android back button from closing the app
+  handleBack() {
+    this.backHandlerSub = BackHandler.addEventListener('hardwareBackPress', () => {
+      backendService.chat.getChatDetail$().first().subscribe(detail => {
+        if (detail) {
+          backendService.chat.closeChat()
+        } else {
+          backendService.getTab$().first().subscribe(tab => {
+            if (tab == 'chats') {
+              backendService.changeTab('explore')
+            } else {
+              Alert.alert(
+                'Confirm exit',
+                'Do you want to quit the app?',
+                [{ text: 'CANCEL', style: 'cancel' },
+                { text: 'OK', onPress: () => RNExitApp.exitApp() }]
+              )
+            }
+          })
+        }
+      })
+      return true
+    })
   }
 
   componentWillUnmount() {
     this.tabSub?.unsubscribe()
     this.authStateSub?.unsubscribe()
     this.keyboardOpenSub?.unsubscribe()
+    this.backHandlerSub?.remove()
     this.playbackStateListener?.remove()
   }
 
