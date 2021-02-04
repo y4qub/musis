@@ -1,10 +1,10 @@
 import React from "react";
-import { IChatItem } from "../interfaces/chatItem";
+import { IChatItem } from "../interfaces/chat-item";
 import { View, FlatList, TouchableOpacity, Image, Text, TextInput, StyleSheet, Dimensions, Keyboard, EmitterSubscription } from "react-native";
-import { IMessage } from "../interfaces/firebase/message";
+import { IFirebaseMessage } from "../interfaces/firebase/message";
 import { backendService } from "../../src/services/backend";
 import Icon from 'react-native-vector-icons/Ionicons';
-import Colors from "../constants/Colors";
+import Colors from "../constants/colors";
 import { Subscription } from 'rxjs'
 
 interface IProps { show: boolean }
@@ -13,7 +13,7 @@ interface IState {
     chatItems: IChatItem[]
     detail?: {
         chatItem: IChatItem
-        messages: IMessage[]
+        messages: IFirebaseMessage[]
     }
     keyboardOpen?: boolean
     keyboardHeight: number
@@ -182,7 +182,7 @@ export class ChatScreen extends React.Component<IProps, IState> {
         )
     }
 
-    Message = (message: IMessage) => {
+    Message = (message: IFirebaseMessage) => {
         const messageStyle = message.uid == backendService.user.getUid() ? styles.textBubbleOwn : styles.textBubble
         return (
             <View style={messageStyle}>
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     },
     chats: {
         position: 'absolute',
-        backgroundColor: Colors.primaryBg, paddingVertical: 25, borderRadius: 40,
+        backgroundColor: Colors.background, paddingVertical: 25, borderRadius: 40,
         width: Dimensions.get('window').width,
         height: Dimensions.get('window').height * 0.7,
         top: 0

@@ -2,8 +2,8 @@ import React from "react"
 import { View, StyleSheet, TouchableOpacity, Text, TextInput, Dimensions, ProgressViewIOS, ActivityIndicator, Keyboard } from "react-native"
 import { backendService } from "../services/backend"
 import { DissmissKeyboard } from "../components/DismissKeyboard"
-import { LoginFields } from "src/interfaces/loginFields"
-import Colors from "../constants/Colors"
+import { LoginFields } from "src/interfaces/login-fields"
+import Colors from "../constants/colors"
 
 interface IProps {
     loaded?: boolean
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
         ...StyleSheet.absoluteFillObject,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: Colors.primaryBg
+        backgroundColor: Colors.background
     },
     chatTextInput: {
         width: Dimensions.get('screen').width * 0.7,

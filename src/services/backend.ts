@@ -4,14 +4,14 @@ import '@react-native-firebase/auth';
 import { ISong } from '../interfaces/song'
 import { Subject, Observable, BehaviorSubject } from 'rxjs'
 import { flatMap, switchMap, share } from 'rxjs/operators'
-import { IMessage } from '../interfaces/firebase/message'
+import { IFirebaseMessage } from '../interfaces/firebase/message'
 import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
-import { IChatItem } from '../interfaces/chatItem';
-import { IChat } from '../interfaces/firebase/chat';
+import { IChatItem } from '../interfaces/chat-item';
+import { IFirebaseChat } from '../interfaces/firebase/chat';
 import { Tab } from '../interfaces/tab';
-import { IChatDetail } from '../interfaces/chatDetail';
-import { IUser } from 'src/interfaces/firebase/user';
+import { IChatDetail } from '../interfaces/chat-detail';
+import { IFirebaseUser } from 'src/interfaces/firebase/user';
 import Geolocation from 'react-native-geolocation-service';
 
 class BackendService {
@@ -81,7 +81,7 @@ class BackendService {
         const chats = await firebase.firestore().collection(`chats`)
             .where('users', 'array-contains', uid1).get()
         const existingChats = chats.docs.filter(chat => chat.data().users.includes(uid2))
-        return existingChats[0]?.data() as IChat
+        return existingChats[0]?.data() as IFirebaseChat
     }
     private generateRandomColor = () => {
         const random = Math.round(Math.random() * 10)
@@ -164,7 +164,7 @@ class BackendService {
     }
     chat = {
         sendMessage: async (text: string, chatId: string) => {
-            const message: IMessage = {
+            const message: IFirebaseMessage = {
                 text: text,
                 uid: this.user.getUid(),
                 createdAt: firebase.firestore.Timestamp.now()
@@ -173,7 +173,7 @@ class BackendService {
             return ref.update({ messages: firebase.firestore.FieldValue.arrayUnion(message) })
         },
         createChat: async (uid: string) => {
-            const newChat: Partial<IChat> = { users: [uid, this.user.getUid()] }
+            const newChat: Partial<IFirebaseChat> = { users: [uid, this.user.getUid()] }
             const chat = await this.findChat(newChat.users[0], newChat.users[1])
             if (chat) return chat.id
             const data = await firebase.firestore().collection(`chats`).add(newChat)
@@ -204,7 +204,7 @@ class BackendService {
                     for (const chat of data.docs) {
                         const users: string[] = chat.data().users
                         const otherUserUid = users.filter(uid => uid != this.user.getUid())[0]
-                        const otherUser = (await this.getUser(otherUserUid).get())?.data() as IUser
+                        const otherUser = (await this.getUser(otherUserUid).get())?.data() as IFirebaseUser
                         if (!otherUser) continue
                         // Compose chatItem
                         const chatItem: IChatItem = {

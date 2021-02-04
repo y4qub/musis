@@ -3,9 +3,9 @@ import { StyleSheet, PermissionsAndroid, Alert } from "react-native";
 import MapView, { Region } from 'react-native-maps';
 import { PlayerIcon } from "../components/PlayerIcon";
 import Geolocation from 'react-native-geolocation-service';
-import mapStyle from '../map_style.json'
+import mapStyle from '../../assets/map-style.json'
 import { backendService } from "../services/backend";
-import { IUser } from "src/interfaces/firebase/user";
+import { IFirebaseUser } from "src/interfaces/firebase/user";
 import { firebase } from "@react-native-firebase/firestore";
 import { ISong } from "src/interfaces/song";
 import { Subscription } from 'rxjs'
@@ -13,7 +13,7 @@ import { Subscription } from 'rxjs'
 interface IProps { }
 
 interface IState {
-    users: IUser[]
+    users: IFirebaseUser[]
     location?: Region
     song?: ISong
 }
@@ -47,7 +47,7 @@ export class MapScreen extends React.Component<IProps, IState> {
         this.getUsersSub = backendService.user.getUsers$()
             .map(data =>
                 data.docs.map(element => {
-                    const user = element.data() as IUser
+                    const user = element.data() as IFirebaseUser
                     return user
                 })
             ).subscribe(data => {

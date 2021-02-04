@@ -13,7 +13,7 @@ import { LoginScreen } from './screens/LoginScreen'
 import { Subscription } from 'rxjs'
 import Icon from 'react-native-vector-icons/Ionicons';
 import RNExitApp from 'react-native-exit-app';
-import Colors from './constants/Colors'
+import Colors from './constants/colors'
 
 interface IProps { }
 
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: Colors.primaryBg
+    backgroundColor: Colors.background
   },
   appTitleText: {
     fontSize: 40,
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     height: 56, width: 56,
     justifyContent: "center",
     alignItems: 'center',
-    backgroundColor: Colors.primaryBg,
+    backgroundColor: Colors.background,
     marginLeft: 25,
     right: 10
   }

@@ -1,6 +1,6 @@
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 
-export interface IUser {
+export interface IFirebaseUser {
     location?: FirebaseFirestoreTypes.GeoPoint
     song?: {
         artist: string

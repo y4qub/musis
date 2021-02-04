@@ -3,10 +3,10 @@ import { Image, View, StyleSheet, Text, Dimensions } from 'react-native'
 import { Marker, Callout } from "react-native-maps";
 import { backendService } from "../services/backend";
 import Icon from 'react-native-vector-icons/Ionicons';
-import { IUser } from "src/interfaces/firebase/user";
+import { IFirebaseUser } from "src/interfaces/firebase/user";
 
 interface IProps {
-    user: IUser,
+    user: IFirebaseUser,
     color: string,
     localUser?: boolean
 }

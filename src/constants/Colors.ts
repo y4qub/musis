@@ -1,9 +1,9 @@
-const tintColor = '#2f95dc'
-const primary = '#FF7674'
-const primaryBg = '#202030'
+// Global variables to store all theme colors
 
 export default {
-  primary,
-  tintColor,
-  primaryBg
+  primary: '#309EFF',
+  accent: '#FF7674',
+  tint: '#2f95dc',
+  background: '#202030',
+  backgroundLight: '#2C2C41'
 }
